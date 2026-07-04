@@ -50,26 +50,19 @@
 </head>
 <body class="p-2 flex flex-col items-center min-h-screen">
 
-    <div id="pipContainer" class="w-full max-w-sm space-y-2 p-2 bg-[#FAF8F5]">
+    <div class="w-full max-w-sm space-y-2 p-1">
         <header class="text-center py-2 border-b border-stone-200 mb-1 flex justify-between items-center px-1">
             <span class="text-xs font-bold text-stone-400 tracking-wide">ROV <span class="text-[#FF758F]">TAGS LIVE</span></span>
             
-            <div class="flex items-center gap-1.5">
-                <!-- ✨ ปุ่มเปิดหน้าต่างลอย (รองรับทั้ง PC และมือถือ) -->
-                <button onclick="handleFloatWindow()" id="pipBtn" title="เปิดหน้าต่างลอยทับแอปอื่น" class="w-6 h-6 flex items-center justify-center rounded-full bg-white border border-stone-200 text-stone-400 hover:text-[#FF4D6D] hover:border-[#FF4D6D] active:scale-90 transition-all shadow-sm">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 9h6v6M3 11v6a2 2 0 002 2h6M21 13V7a2 2 0 00-2-2h-6M10 14L21 3"></path>
-                    </svg>
-                </button>
-                
-                <button onclick="resetHistory(this)" title="ล้างประวัติการคัดลอก" class="w-6 h-6 flex items-center justify-center rounded-full bg-white border border-stone-200 text-stone-400 hover:text-[#FF4D6D] hover:border-[#FF4D6D] active:scale-90 transition-all shadow-sm">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"></path>
-                    </svg>
-                </button>
-            </div>
+            <!-- ปุ่มรีเซ็ตประวัติแบบไอคอนมินิมอล -->
+            <button onclick="resetHistory(this)" title="ล้างประวัติการคัดลอก" class="w-6 h-6 flex items-center justify-center rounded-full bg-white border border-stone-200 text-stone-400 hover:text-[#FF4D6D] hover:border-[#FF4D6D] active:scale-90 transition-all shadow-sm">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"></path>
+                </svg>
+            </button>
         </header>
 
+        <!-- ตัวเลือกโหมดการคัดลอกสำหรับ TikTok -->
         <div class="grid grid-cols-2 gap-1 bg-stone-100 p-1 rounded-lg text-center border border-stone-200">
             <button id="btnModeFull" onclick="setCopyMode('full')" class="text-[10px] font-medium py-1 rounded-md bg-white shadow-sm text-stone-700 transition-all">📋 ข้อความเต็ม</button>
             <button id="btnModeOnly" onclick="setCopyMode('only')" class="text-[10px] font-medium py-1 rounded-md text-stone-400 transition-all">🎵 เฉพาะแท็กไป TikTok</button>
@@ -79,6 +72,7 @@
         <div id="listContainer" class="flex flex-col gap-1.5"></div>
     </div>
 
+    <!-- แจ้งเตือนสถานะการคัดลอก -->
     <div id="toast" class="fixed top-1/5 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#FF758F] text-white px-4 py-1.5 rounded-full shadow-md transition-all duration-200 opacity-0 pointer-events-none z-50 text-[10px] tracking-wider font-medium">
         COPIED
     </div>
@@ -90,73 +84,11 @@
         let copyMode = 'full'; 
         let copiedHistory = JSON.parse(localStorage.getItem('rov_tag_history')) || [];
         let nextTargetIndex = copiedHistory.length > 0 ? Math.max(...copiedHistory) + 1 : 0;
-        let pipWindow = null;
-
-        // ⚡ ตรวจสอบว่าใช้งานผ่านมือถือหรือไม่
-        function isMobileDevice() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        }
-
-        // ⚡ ฟังก์ชันหลักสำหรับปุ่มเปิดหน้าต่างลอย
-        async function handleFloatWindow() {
-            // กรณีเป็นมือถือ: คัดลอกลิงก์ให้อัตโนมัติเพื่อเอาไปเปิดในแอป Floating Browser
-            if (isMobileDevice()) {
-                const currentUrl = window.location.href;
-                navigator.clipboard.writeText(currentUrl).then(() => {
-                    alert("🔗 คัดลอกลิงก์ของหน้าเว็บนี้แล้วจ้า!\n\n💡 วิธีใช้งานบนมือถือ:\n1. เปิดแอปเบราว์เซอร์ลอยตัว (เช่น Floating Browser)\n2. วางลิงก์นี้ลงไปเพื่อเปิดหน้าต่างจิ๋วทับเกมหรือแอปอื่นได้เลยครับ");
-                });
-                return;
-            }
-
-            // กรณีเป็นคอมพิวเตอร์ PC/Mac: เปิด PiP แบบเดิม
-            if (!('documentPictureInPicture' in window)) {
-                alert('⚠️ เบราว์เซอร์คอมพิวเตอร์ของคุณยังไม่รองรับระบบหน้าต่างลอย แนะนำให้เปิดผ่าน Google Chrome ครับ');
-                return;
-            }
-
-            if (pipWindow) {
-                pipWindow.close();
-                return;
-            }
-
-            pipWindow = await window.documentPictureInPicture.requestWindow({ width: 360, height: 500 });
-
-            [...document.styleSheets].forEach((styleSheet) => {
-                try {
-                    const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
-                    const style = document.createElement('style');
-                    style.textContent = cssRules;
-                    pipWindow.document.head.appendChild(style);
-                } catch (e) {
-                    const link = document.createElement('link');
-                    link.rel = 'stylesheet'; link.href = styleSheet.href;
-                    pipWindow.document.head.appendChild(link);
-                }
-            });
-            
-            const fontLink = document.createElement('link');
-            fontLink.href = "https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap";
-            fontLink.rel = "stylesheet";
-            pipWindow.document.head.appendChild(fontLink);
-
-            const container = document.getElementById('pipContainer');
-            pipWindow.document.body.appendChild(container);
-            pipWindow.document.body.style.backgroundColor = "#FAF8F5";
-            
-            pipWindow.document.getElementById('pipBtn').innerHTML = `<svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>`;
-
-            pipWindow.addEventListener('pagehide', () => {
-                pipWindow = null;
-                document.body.appendChild(container);
-                document.getElementById('pipBtn').innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 9h6v6M3 11v6a2 2 0 002 2h6M21 13V7a2 2 0 00-2-2h-6M10 14L21 3"></path></svg>`;
-            });
-        }
 
         function setCopyMode(mode) {
             copyMode = mode;
-            const doc = pipWindow ? pipWindow.document : document;
-            const btnFull = doc.getElementById('btnModeFull');
-            const btnOnly = doc.getElementById('btnModeOnly');
+            const btnFull = document.getElementById('btnModeFull');
+            const btnOnly = document.getElementById('btnModeOnly');
             if (mode === 'full') {
                 btnFull.className = "text-[10px] font-medium py-1 rounded-md bg-white shadow-sm text-stone-700 transition-all";
                 btnOnly.className = "text-[10px] font-medium py-1 rounded-md text-stone-400 transition-all";
@@ -208,25 +140,22 @@
                 }
 
                 tagData = parseCSV(dataText);
-                const doc = pipWindow ? pipWindow.document : document;
-                doc.getElementById('loading').style.display = 'none';
+                document.getElementById('loading').style.display = 'none';
                 render();
             } catch (error) {
-                const doc = pipWindow ? pipWindow.document : document;
-                doc.getElementById('loading').innerText = "❌ โหลดข้อมูลล้มเหลว";
+                document.getElementById('loading').innerText = "❌ โหลดข้อมูลล้มเหลว";
             }
         }
 
         function render() {
-            const doc = pipWindow ? pipWindow.document : document;
-            const list = doc.getElementById('listContainer');
+            const list = document.getElementById('listContainer');
             if (!list) return;
             list.innerHTML = ''; 
             
             tagData.forEach((item, i) => {
                 if(!item.tag) return; 
                 const clipNum = String(i + 1).padStart(2, '0');
-                const div = doc.createElement('div');
+                const div = document.createElement('div');
                 div.id = `card-${i}`;
                 
                 const isCopied = copiedHistory.includes(i);
@@ -256,7 +185,7 @@
                         setTimeout(() => {
                             nextTargetIndex = i + 1;
                             render();
-                            const nextCard = doc.getElementById(`card-${nextTargetIndex}`);
+                            const nextCard = document.getElementById(`card-${nextTargetIndex}`);
                             if (nextCard) nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }, 300);
                     });
