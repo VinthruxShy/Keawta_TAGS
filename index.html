@@ -133,13 +133,6 @@
             </div>
         </header>
 
-        <!-- 🔊 แผงเลือกโปรไฟล์เสียง (Sound Profiles) ดักจับอารมณ์ -->
-        <div class="bg-toggle grid grid-cols-3 gap-1 p-1 rounded-lg text-center border text-[9px] font-medium transition-colors mb-1.5">
-            <button id="sndSquishy" onclick="setSoundProfile('squishy')" class="py-1 rounded-md bg-white dark:bg-[#4A3E3B] text-stone-700 dark:text-stone-200 shadow-sm transition-all">🧸 Squishy</button>
-            <button id="sndKeyboard" onclick="setSoundProfile('keyboard')" class="py-1 rounded-md text-stone-400 transition-all">⌨️ Keyboard</button>
-            <button id="sndWax" onclick="setSoundProfile('wax')" class="py-1 rounded-md text-stone-400 transition-all">🕯️ Wax / Slime</button>
-        </div>
-
         <!-- ตัวเลือกโหมดการคัดลอกสำหรับ TikTok -->
         <div class="bg-toggle grid grid-cols-2 gap-1 p-1 rounded-lg text-center border transition-colors">
             <button id="btnModeFull" onclick="setCopyMode('full')" class="text-[10px] font-medium py-1 rounded-md bg-white dark:bg-[#4A3E3B] shadow-sm text-stone-700 dark:text-stone-200 transition-all">📋 ข้อความเต็ม</button>
@@ -159,106 +152,8 @@
 
         let tagData = [];
         let copyMode = 'full'; 
-        let soundProfile = localStorage.getItem('rov_sound_profile') || 'squishy';
         let copiedHistory = JSON.parse(localStorage.getItem('rov_tag_history')) || [];
         let nextTargetIndex = copiedHistory.length > 0 ? Math.max(...copiedHistory) + 1 : 0;
-
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-        // 🔊 ระบบสร้างเสียง ASMR หลายมิติ
-        function triggerSound() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            
-            const now = audioCtx.currentTime;
-            
-            if (soundProfile === 'squishy') {
-                // 🧸 1. เสียงบีบสกุชชี่หนืดหนับ
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(140, now);
-                osc.frequency.exponentialRampToValueAtTime(360, now + 0.12);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.16);
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.start(); osc.stop(now + 0.16);
-                
-            } else if (soundProfile === 'keyboard') {
-                // ⌨️ 2. เสียงคีย์บอร์ดครีมมี่ทุ้มแน่น (Linear Switch)
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(110, now);
-                osc.frequency.exponentialRampToValueAtTime(70, now + 0.06);
-                
-                // เติมคลื่นเสียงรบกวนจิ๋วๆ (Noise) จำลองเสียงบอดี้กระทบ
-                const bufferSize = audioCtx.sampleRate * 0.04;
-                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-                const data = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-                const noise = audioCtx.createBufferSource();
-                noise.buffer = buffer;
-                const noiseGain = audioCtx.createGain();
-                
-                gain.gain.setValueAtTime(0.5, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
-                noiseGain.gain.setValueAtTime(0.12, now);
-                noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
-                
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                noise.connect(noiseGain); noiseGain.connect(audioCtx.destination);
-                
-                osc.start(); osc.stop(now + 0.07);
-                noise.start(); noise.stop(now + 0.03);
-                
-            } else if (soundProfile === 'wax') {
-                // 🕯️ 3. เสียงแว็กซ์/สไลม์ กะเทาะแตกเปรี๊ยะ
-                const baseOsc = audioCtx.createOscillator();
-                const baseGain = audioCtx.createGain();
-                baseOsc.type = 'triangle';
-                baseOsc.frequency.setValueAtTime(80, now);
-                baseGain.gain.setValueAtTime(0.4, now);
-                baseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
-                baseOsc.connect(baseGain); baseGain.connect(audioCtx.destination);
-                baseOsc.start(); baseOsc.stop(now + 0.12);
-                
-                // สุ่มสร้างเสียง Crackle จิ๋วๆ 3 เม็ดซ้อนกันเร็วๆ จำลองเสียงเนื้อแว็กซ์แตกตัว
-                for (let i = 0; i < 4; i++) {
-                    const clickDelay = now + (i * 0.02) + (Math.random() * 0.01);
-                    const crackle = audioCtx.createOscillator();
-                    const crackleGain = audioCtx.createGain();
-                    crackle.type = 'sine';
-                    crackle.frequency.setValueAtTime(800 + (Math.random() * 600), clickDelay);
-                    crackleGain.gain.setValueAtTime(0.08, clickDelay);
-                    crackleGain.gain.exponentialRampToValueAtTime(0.001, clickDelay + 0.015);
-                    crackle.connect(crackleGain); crackleGain.connect(audioCtx.destination);
-                    crackle.start(clickDelay); crackle.stop(clickDelay + 0.015);
-                }
-            }
-        }
-
-        function setSoundProfile(profile) {
-            soundProfile = profile;
-            localStorage.setItem('rov_sound_profile', profile);
-            triggerSound(); // กดปุ่มแล้วเทสต์เสียงให้ฟังทันที
-            
-            const buttons = {
-                squishy: document.getElementById('sndSquishy'),
-                keyboard: document.getElementById('sndKeyboard'),
-                wax: document.getElementById('sndWax')
-            };
-            
-            const isDark = document.body.classList.contains('dark-mode');
-            const activeClass = isDark ? "bg-[#4A3E3B] text-stone-200 shadow-sm" : "bg-white text-stone-700 shadow-sm";
-            
-            Object.keys(buttons).forEach(k => {
-                if (k === profile) {
-                    buttons[k].className = `py-1 rounded-md transition-all ${activeClass}`;
-                } else {
-                    buttons[k].className = "py-1 rounded-md text-stone-400 transition-all";
-                }
-            });
-        }
 
         function initTheme() {
             const savedTheme = localStorage.getItem('rov_theme') || 'light';
@@ -270,7 +165,6 @@
         }
 
         function toggleTheme() {
-            triggerSound();
             if (document.body.classList.contains('light-mode')) {
                 document.body.classList.replace('light-mode', 'dark-mode');
                 localStorage.setItem('rov_theme', 'dark');
@@ -283,7 +177,6 @@
                 document.getElementById('iconMoon').classList.remove('hidden');
             }
             setCopyMode(copyMode); 
-            setSoundProfile(soundProfile);
             render(); 
         }
 
@@ -373,8 +266,6 @@
                     ${isNext ? 'next-suggested' : ''}`;
                 
                 div.onclick = () => {
-                    triggerSound(); // ⚡ เล่นเสียง ASMR ที่คุณสลับเลือกไว้
-                    
                     const textToCopy = (copyMode === 'full') 
                         ? `คลิปที่ ${clipNum}: ${item.tag} (View ${item.view})` 
                         : item.tag;
@@ -424,7 +315,6 @@
         }
 
         function resetHistory(btn) {
-            triggerSound();
             const svg = btn.querySelector('svg');
             svg.classList.add('spin-effect');
             setTimeout(() => svg.classList.remove('spin-effect'), 600);
@@ -435,7 +325,7 @@
         }
 
         initTheme();
-        setSoundProfile(soundProfile);
+        setCopyMode(copyMode);
         fetchTags();
     </script>
 </body>
