@@ -12,7 +12,7 @@
             overflow-x: hidden; 
             user-select: none; 
             -webkit-user-select: none;
-            transition: color 0.3s ease;
+            transition: color 0.4s cubic-bezier(0.25, 1, 0.5, 1);
             position: relative;
         }
 
@@ -22,13 +22,12 @@
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: -1;
-            /* สร้างลวดลายพิกเซลขนาดย่อมขนาด 20x20px ด้วย CSS Radial/Linear Gradient */
             background-size: 20px 20px;
-            animation: pixelMove 20s linear infinite;
-            transition: background 0.3s ease, opacity 0.3s ease;
+            animation: pixelMove 25s linear infinite;
+            transition: background 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease;
         }
         
-        /* ☀️ พิกเซลโหมดสว่าง (ชมพูพาสเทลผสมเหลืองครีมนม) */
+        /* ☀️ พิกเซลโหมดสว่าง */
         body.light-mode::before {
             background-color: #FAF6EE;
             background-image: 
@@ -39,58 +38,83 @@
         }
         body.light-mode { color: #4A4342; }
         body.light-mode .minimal-card { background: rgba(255, 255, 255, 0.95); border: 1px solid #EAE1D4; backdrop-filter: blur(4px); }
-        body.light-mode .already-copied { background-color: rgba(244, 239, 230, 0.7) !important; border-color: #DCD5C9 !important; }
+        body.light-mode .already-copied { background-color: rgba(244, 239, 230, 0.6) !important; border-color: #DCD5C9 !important; }
         body.light-mode .text-main { color: #4A4342; }
         body.light-mode .bg-toggle { background-color: rgba(243, 236, 224, 0.8); border-color: #E6DCCD; }
         body.light-mode .note-tag { background-color: #FEF5D1; color: #B57C1E; border: 1px solid #FBE7A1; }
 
-        /* 🌙 พิกเซลโหมดมืด (พิกเซลนีออนชมพู-ม่วงบนพื้นดำน้ำตาลเข้ม) */
+        /* 🌙 พิกเซลโหมดมืด */
         body.dark-mode::before {
             background-color: #1A1816;
             background-image: 
-                radial-gradient(rgba(255, 117, 143, 0.15) 20%, transparent 20%),
-                radial-gradient(rgba(245, 208, 97, 0.08) 20%, transparent 20%);
+                radial-gradient(rgba(255, 117, 143, 0.12) 20%, transparent 20%),
+                radial-gradient(rgba(245, 208, 97, 0.06) 20%, transparent 20%);
             background-position: 0 0, 10px 10px;
             opacity: 1;
         }
         body.dark-mode { color: #E8E2D9; }
         body.dark-mode .minimal-card { background: rgba(38, 34, 31, 0.95); border: 1px solid #3D3631; backdrop-filter: blur(4px); }
-        body.dark-mode .already-copied { background-color: rgba(21, 19, 18, 0.6) !important; border-color: #282422 !important; opacity: 0.5; }
+        body.dark-mode .already-copied { background-color: rgba(21, 19, 18, 0.5) !important; border-color: #282422 !important; opacity: 0.4; }
         body.dark-mode .text-main { color: #E8E2D9; }
         body.dark-mode .bg-toggle { background-color: rgba(40, 36, 34, 0.8); border-color: #3D3631; }
         body.dark-mode .note-tag { background-color: #42371C; color: #F5D061; border: 1px solid #574922; }
 
-        /* แอนิเมชันสั่งให้เม็ดพิกเซลเลื่อนไถลเฉียงๆ แบบวนลูป */
         @keyframes pixelMove {
             0% { background-position: 0 0, 10px 10px; }
             100% { background-position: 500px -500px, 510px -490px; }
         }
 
-        /* 🚨 คิวถัดไป */
+        /* ⚡ การ์ดมินิมอล + ไมโครแอนิเมชันสปริงเบาๆ */
+        .minimal-card {
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                        background-color 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        border-color 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        box-shadow 0.4s ease;
+        }
+        .minimal-card:active {
+            transform: scale(0.97);
+        }
+
+        /* 🚨 คิวถัดไปแบบ Ultra Smooth Pulse */
         .next-suggested {
             border: 2px solid #FF4D6D !important;
             background-color: #FFFEE0 !important;
-            box-shadow: 0 0 10px rgba(255, 77, 109, 0.3);
-            animation: pulse-border 1.6s infinite ease-in-out;
+            box-shadow: 0 4px 12px rgba(255, 77, 109, 0.15);
+            animation: pulse-border 2s infinite ease-in-out;
+            transform: scale(1.01);
         }
         body.dark-mode .next-suggested {
             background-color: #363021 !important;
+            box-shadow: 0 4px 12px rgba(255, 77, 109, 0.08);
         }
         
         @keyframes pulse-border {
-            0% { border-color: #FF4D6D; box-shadow: 0 0 8px rgba(255, 77, 109, 0.3); }
-            50% { border-color: #FF85A1; box-shadow: 0 0 14px rgba(255, 133, 161, 0.5); }
-            100% { border-color: #FF4D6D; box-shadow: 0 0 8px rgba(255, 77, 109, 0.3); }
+            0% { border-color: #FF4D6D; box-shadow: 0 4px 12px rgba(255, 77, 109, 0.15); }
+            50% { border-color: #FF85A1; box-shadow: 0 6px 18px rgba(255, 133, 161, 0.3); transform: scale(1.015); }
+            100% { border-color: #FF4D6D; box-shadow: 0 4px 12px rgba(255, 77, 109, 0.15); }
         }
         
-        .copied-flash { animation: flash 0.3s ease forwards; }
-        @keyframes flash { 
-            0% { background-color: #FFF; } 
-            50% { background-color: #FFE5EC; } 
-            100% { background-color: #F0FBF4; border-color: #A3E635; } 
+        /* 🟩 เอฟเฟกต์แฟลชตอนก๊อปปี้สำเร็จแบบสมูทคลายตัว */
+        .copied-flash { animation: flashSmooth 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes flashSmooth { 
+            0% { background-color: #FFE5EC; border-color: #FF4D6D; transform: scale(0.97); } 
+            40% { background-color: #F0FBF4; border-color: #A3E635; transform: scale(1.01); }
+            100% { transform: scale(1); } 
         }
-        .spin-effect { animation: spin 0.5s ease-in-out; }
+
+        /* 🔄 แอนิเมชันปุ่มรีเซ็ต */
+        .spin-effect { animation: spin 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
         @keyframes spin { 100% { transform: rotate(-360deg); } }
+
+        /* 🎀 เอฟเฟกต์ Toast แบบลอยสไลด์นุ่มๆ */
+        #toast {
+            transform: translate(-50%, 20px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+        }
+        #toast.show {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
     </style>
 </head>
 <body class="p-2 flex flex-col items-center min-h-screen light-mode">
@@ -129,9 +153,9 @@
         <div id="listContainer" class="flex flex-col gap-1.5"></div>
     </div>
 
-    <!-- แจ้งเตือนสถานะการคัดลอก -->
-    <div id="toast" class="fixed top-1/5 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#FF758F] text-white px-4 py-1.5 rounded-full shadow-md transition-all duration-200 opacity-0 pointer-events-none z-50 text-[10px] tracking-wider font-medium">
-        COPIED
+    <!-- แจ้งเตือนคัดลอกสำเร็จสไตล์ลอยนุ่มนวล -->
+    <div id="toast" class="fixed bottom-12 left-1/2 bg-[#FF758F] text-white px-5 py-2 rounded-full shadow-lg opacity-0 pointer-events-none z-50 text-[10px] tracking-wider font-semibold">
+        COPIED PABS! ✨
     </div>
 
     <script>
@@ -232,6 +256,18 @@
             }
         }
 
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            
+            // ล้างไทม์เมอร์ตัวเก่าออกหากมีการรัวนิ้วกดซ้ำ
+            if (window.toastTimeout) clearTimeout(window.toastTimeout);
+            
+            window.toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 800);
+        }
+
         function render() {
             const list = document.getElementById('listContainer');
             if (!list) return;
@@ -246,7 +282,7 @@
                 const isCopied = copiedHistory.includes(i);
                 const isNext = (i === nextTargetIndex) && (nextTargetIndex < tagData.length);
                 
-                div.className = `minimal-card w-full p-2 flex items-center gap-2 cursor-pointer select-none 
+                div.className = `minimal-card w-full p-2.5 flex items-center gap-2.5 cursor-pointer select-none 
                     ${isCopied ? 'already-copied' : ''} 
                     ${isNext ? 'next-suggested' : ''}`;
                 
@@ -260,19 +296,25 @@
                             copiedHistory.push(i);
                             localStorage.setItem('rov_tag_history', JSON.stringify(copiedHistory));
                         }
+                        
+                        // ถอดสถานะคิวเก่าและรันฟังก์ชันแฟลชแบบสมูท
                         div.classList.remove('next-suggested');
                         div.classList.add('copied-flash');
-                        
-                        const targetToast = document.getElementById('toast');
-                        targetToast.style.opacity = "1";
-                        setTimeout(() => targetToast.style.opacity = "0", 500);
+                        showToast();
 
+                        // หน่วงเวลาให้ตัวการ์ดรันแอนิเมชันแฟลชเสร็จสิ้นแบบเนียนตา ก่อนอัปเดตสลับใบถัดไป
                         setTimeout(() => {
                             nextTargetIndex = i + 1;
                             render();
-                            const nextCard = document.getElementById('card-' + nextTargetIndex);
-                            if (nextCard) nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }, 300);
+                            
+                            // ระบบโฟกัสและขยับหน้าจอแบบลื่นไหลพิเศษ
+                            setTimeout(() => {
+                                const nextCard = document.getElementById('card-' + nextTargetIndex);
+                                if (nextCard) {
+                                    nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }
+                            }, 50);
+                        }, 250);
                     });
                 };
 
@@ -284,7 +326,7 @@
                 div.innerHTML = `
                     ${numberDisplay}
                     <div class="flex-grow min-w-0">
-                        <div class="text-[11px] ${isCopied ? 'text-stone-400 line-through opacity-40' : 'text-main'} font-normal truncate">
+                        <div class="text-[11px] ${isCopied ? 'text-stone-400 line-through opacity-40' : 'text-main'} font-normal truncate transition-all duration-300">
                             ${item.tag}
                         </div>
                         <div class="text-[8px] text-stone-400 dark:text-stone-500 font-medium mt-0.5 flex items-center gap-1">
@@ -302,7 +344,7 @@
         function resetHistory(btn) {
             const svg = btn.querySelector('svg');
             svg.classList.add('spin-effect');
-            setTimeout(() => svg.classList.remove('spin-effect'), 500);
+            setTimeout(() => svg.classList.remove('spin-effect'), 600);
             copiedHistory = [];
             nextTargetIndex = 0;
             localStorage.removeItem('rov_tag_history');
