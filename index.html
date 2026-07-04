@@ -3,143 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Keawta Creator Tags</title>
+    <title>RoV Tags Cloud Live</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         body { 
             font-family: 'Mitr', sans-serif; 
-            background-color: #FFFDF9; 
-            color: #4A3E3D; 
+            background-color: #FAF8F5; 
+            color: #4A4342; 
             overflow-x: hidden; 
             user-select: none; 
             -webkit-user-select: none;
         }
-        .cute-card { 
+        .minimal-card { 
             background: #FFFFFF; 
-            border: 2px solid #F3E9DC; 
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(164, 144, 124, 0.04);
-            transition: all 0.15s ease; 
+            border: 1px solid #EAE4DC; 
+            border-radius: 10px;
+            transition: all 0.2s ease; 
             -webkit-tap-highlight-color: transparent; 
         }
-        /* คิวถัดไปที่ระบบแนะนำให้ก๊อปปี้ต่อ */
         .next-suggested {
-            border-color: #FFD60A !important;
-            box-shadow: 0 0 0 3px rgba(255, 214, 10, 0.35);
-            background-color: #FFFDF4;
+            border: 2px solid #FF4D6D !important;
+            background-color: #FFFDEB !important;
+            box-shadow: 0 0 8px rgba(255, 77, 109, 0.25);
+            animation: pulse-border 1.6s infinite ease-in-out;
         }
-        /* เอฟเฟกต์ตอนกดก๊อปปี้เสร็จ */
-        .copied-flash { animation: flash 0.4s ease forwards; }
+        .already-copied {
+            background-color: #F5F2ED !important;
+            border-color: #D6CFC7 !important;
+            opacity: 0.75;
+        }
+        @keyframes pulse-border {
+            0% { border-color: #FF4D6D; box-shadow: 0 0 8px rgba(255, 77, 109, 0.25); }
+            50% { border-color: #FF85A1; box-shadow: 0 0 12px rgba(255, 133, 161, 0.45); }
+            100% { border-color: #FF4D6D; box-shadow: 0 0 8px rgba(255, 77, 109, 0.25); }
+        }
+        .copied-flash { animation: flash 0.3s ease forwards; }
         @keyframes flash { 
             0% { background-color: #FFF; } 
-            50% { background-color: #FFB7B2; } 
-            100% { background-color: #E8F5E9; border-color: #81C784; } 
+            50% { background-color: #FFE5EC; } 
+            100% { background-color: #F0FBF4; border-color: #A3E635; } 
         }
+        .spin-effect { animation: spin 0.5s ease-in-out; }
+        @keyframes spin { 100% { transform: rotate(-360deg); } }
     </style>
 </head>
 <body class="p-2 flex flex-col items-center min-h-screen">
 
-    <div class="w-full max-w-md space-y-2">
-        <!-- หัวข้อแบบเล็กพิเศษเพื่อประหยัดพื้นที่ในหน้าต่างลอย -->
-        <header class="text-center py-2 border-b-2 border-dashed border-[#F3E9DC] mb-1">
-            <h1 class="text-lg font-bold text-[#4A3E3D]">
-                RoV <span class="text-[#FF6B6B] bg-[#FFF0F0] px-1.5 py-0.5 rounded-md text-sm">Tag</span> Deck
-            </h1>
-            <p class="text-[9px] text-[#A4907C] font-medium mt-0.5">
-                จิ้มก๊อปปี้รัวๆ ตัวต่อไปจะไฮไลท์ขอบสีเหลืองให้จ้า 🎀
-            </p>
+    <div class="w-full max-w-sm space-y-2">
+        <header class="text-center py-2 border-b border-stone-200 mb-1 flex justify-between items-center px-1">
+            <span class="text-xs font-bold text-stone-400 tracking-wide">ROV <span class="text-[#FF758F]">TAGS LIVE</span></span>
+            <button onclick="resetHistory(this)" title="ล้างประวัติการคัดลอก" class="w-6 h-6 flex items-center justify-center rounded-full bg-white border border-stone-200 text-stone-400 hover:text-[#FF4D6D] hover:border-[#FF4D6D] active:scale-90 transition-all shadow-sm">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"></path>
+                </svg>
+            </button>
         </header>
+
+        <!-- แสดงสถานะการโหลดข้อมูล -->
+        <div id="loading" class="text-center text-xs text-stone-400 py-8">กำลังดึงข้อมูลล่าสุดจากระบบ... ⏱️</div>
 
         <!-- รายการแท็ก -->
         <div id="listContainer" class="flex flex-col gap-1.5"></div>
     </div>
 
-    <!-- แจ้งเตือนสั้นๆ ด่วนๆ บนหน้าต่างลอย -->
-    <div id="toast" class="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#FF8BAB] text-white px-4 py-2 rounded-full font-bold shadow-xl transition-all duration-200 opacity-0 pointer-events-none z-50 text-[11px] border border-white">
-        คัดลอกแล้วจ้า! 📋
+    <div id="toast" class="fixed top-1/5 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#FF758F] text-white px-4 py-1.5 rounded-full shadow-md transition-all duration-200 opacity-0 pointer-events-none z-50 text-[10px] tracking-wider font-medium">
+        COPIED
     </div>
 
     <script>
-        const tagData = [
-            { tag: "#RoV #คลิปRoV #rovth", view: "10,000", pts: "30" },
-            { tag: "#RoV #RoVเป็นเกมตลก #คลิปRoV", view: "10,000", pts: "30" },
-            { tag: "#RoV #ทมิฬหอกศักดิ์สิทธิ์ #RoVฮีโร่ใหม่หัวใจไทย #RoVฮีโร่ใหม่ทมิฬ", view: "15,000", pts: "30" },
-            { tag: "#RoV #RoVเป็นเกมตลก #rovth", view: "15,000", pts: "30" },
-            { tag: "#RoV #RoVเป็นเกมตลก #fpy", view: "15,000", pts: "30" },
-            { tag: "#RoVเป็นเกมตลก #RoV #RoVThailand", view: "20,000", pts: "30", note: "โชว์ช็อตขโมย God Slayer" },
-            { tag: "#RoV #rovth #RoVThailand", view: "20,000", pts: "30" },
-            { tag: "#RoV #rovth #fpy", view: "20,000", pts: "30" },
-            { tag: "#RoV #rovth #trending", view: "20,000", pts: "30" },
-            { tag: "#RoV #RoVเป็นเกมตลก #trending", view: "20,000", pts: "30" },
-            { tag: "#RoV #RoVเป็นเกมตลก #เล่นRoV #rovh", view: "20,000", pts: "30" },
-            { tag: "#RoV #rovth #เล่นRoV", view: "20,000", pts: "30" },
-            { tag: "#RoV #RoVเป็นเกมตลก #RoVเกมภาพสวย", view: "20,000", pts: "30" },
-            { tag: "#RoVเป็นเกมตลก #RoV #RoVThailand", view: "20,000", pts: "30", note: "โชว์ช็อตโหดด้วยวีดีโอจาก Highlight ในเกม" },
-            { tag: "#RoV #rovth #คลิปRoV", view: "15,000", pts: "30", note: "คลิปบัคเพิ่มคลิปในภารกิจได้แล้วค่อยปั้มวิว" },
-            { tag: "#RoVเป็นเกมตลก #RoV #RoVThailand", view: "20,000", pts: "30", note: "โชว์ขโมยบัพศัตรู" },
-            { tag: "#RoV #RoVThailand #RoVล่าการ์ดกลางสยาม #RoVDay2026", view: "20,000", pts: "30" }
-        ];
+        const sheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQLhkH6_H32hlVLnqQbTt_fMuSTfovUJgzhQm_yeTRPew6vwdP59OJQvs10psW_NH6ewOc-42UKNI75/pub?output=csv";
+
+        let tagData = [];
+        let copiedHistory = JSON.parse(localStorage.getItem('rov_tag_history')) || [];
+        let nextTargetIndex = copiedHistory.length > 0 ? Math.max(...copiedHistory) + 1 : 0;
+
+        // 🛠️ ปรับปรุงตัวแปลงไฟล์ CSV ใหม่ให้เสถียร ไม่เอ๋อเวลาเจอกลุ่มแฮชแท็ก
+        function parseCSV(text) {
+            const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => line);
+            if (lines.length === 0) return [];
+            
+            // ฟังก์ชันหั่นคำโดยไม่สน comma ด้านในเครื่องหมายคำพูด
+            const splitLine = (line) => {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                result.push(current.trim());
+                return result.map(v => v.replace(/^"|"$/g, '').trim());
+            };
+
+            const headers = splitLine(lines[0]).map(h => h.toLowerCase());
+            
+            return lines.slice(1).map(line => {
+                const values = splitLine(line);
+                let obj = {};
+                headers.forEach((header, i) => {
+                    obj[header] = values[i] || "";
+                });
+                return obj;
+            });
+        }
+
+        async function fetchTags() {
+            try {
+                const response = await fetch(sheetCsvUrl);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const dataText = await response.text();
+                tagData = parseCSV(dataText);
+                
+                if (tagData.length === 0) {
+                    document.getElementById('loading').innerText = "⚠️ ไม่พบข้อมูลในตาราง กรุณากรอกข้อมูลใน Sheet";
+                    return;
+                }
+                
+                document.getElementById('loading').style.display = 'none';
+                render();
+            } catch (error) {
+                document.getElementById('loading').innerText = "❌ โหลดข้อมูลล้มเหลว กรุณาเช็กการตั้งค่าแชร์ไฟล์";
+                console.error(error);
+            }
+        }
 
         function render() {
             const list = document.getElementById('listContainer');
             list.innerHTML = ''; 
             
             tagData.forEach((item, i) => {
+                if(!item.tag) return; 
                 const clipNum = String(i + 1).padStart(2, '0');
                 const div = document.createElement('div');
                 div.id = `card-${i}`;
-                div.className = `cute-card w-full p-2.5 flex items-center gap-2.5 cursor-pointer select-none`;
                 
-                if (i === 0) div.classList.add('next-suggested');
+                const isCopied = copiedHistory.includes(i);
+                const isNext = (i === nextTargetIndex) && (nextTargetIndex < tagData.length);
+                
+                div.className = `minimal-card w-full p-2 flex items-center gap-2 cursor-pointer select-none 
+                    ${isCopied ? 'already-copied' : ''} 
+                    ${isNext ? 'next-suggested' : ''}`;
                 
                 div.onclick = () => {
                     const textToCopy = `คลิปที่ ${clipNum}: ${item.tag} (View ${item.view})`;
                     
                     navigator.clipboard.writeText(textToCopy).then(() => {
+                        if (!copiedHistory.includes(i)) {
+                            copiedHistory.push(i);
+                            localStorage.setItem('rov_tag_history', JSON.stringify(copiedHistory));
+                        }
                         div.classList.remove('next-suggested');
                         div.classList.add('copied-flash');
-                        setTimeout(() => div.classList.remove('copied-flash'), 400);
                         
                         const toast = document.getElementById('toast');
                         toast.style.opacity = "1";
-                        setTimeout(() => toast.style.opacity = "0", 600);
+                        setTimeout(() => toast.style.opacity = "0", 500);
 
-                        // ระบบช่วยเลื่อนคิวขอบสีเหลืองไปใบถัดไปอัตโนมัติ
-                        const nextIndex = i + 1;
-                        if (nextIndex < tagData.length) {
-                            const nextCard = document.getElementById(`card-${nextIndex}`);
-                            if (nextCard) {
-                                document.querySelectorAll('.cute-card').forEach(c => c.classList.remove('next-suggested'));
-                                nextCard.classList.add('next-suggested');
-                                nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }
-                        }
+                        setTimeout(() => {
+                            nextTargetIndex = i + 1;
+                            render();
+                            const nextCard = document.getElementById(`card-${nextTargetIndex}`);
+                            if (nextCard) nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 300);
                     });
                 };
 
-                const noteHTML = item.note ? `<div class="text-[9px] text-[#FF8BAB] font-medium mt-0.5 bg-[#FFF5F7] px-1.5 py-0.2 rounded inline-block border border-[#FFE3E8] italic">💡 ${item.note}</div>` : '';
+                const noteHTML = item.note ? `<span class="text-[9px] text-[#FF4D6D] font-medium italic bg-[#FFF0F3] px-1 rounded ml-1">#${item.note}</span>` : '';
+                const numberDisplay = isCopied 
+                    ? `<div class="text-[11px] font-bold text-emerald-500 w-5 text-center flex-shrink-0">✓</div>` 
+                    : `<div class="text-[10px] font-bold text-stone-400 w-5 text-center flex-shrink-0">${clipNum}</div>`;
 
                 div.innerHTML = `
-                    <div class="bg-[#FEF9E7] border border-[#F9E79F] text-[#B7950B] w-7 h-7 flex items-center justify-center rounded-lg text-xs font-bold flex-shrink-0">
-                        ${clipNum}
-                    </div>
-                    <div class="flex-grow">
-                        <div class="text-[11px] text-[#4A3E3D] font-medium leading-normal tracking-wide">
+                    ${numberDisplay}
+                    <div class="flex-grow min-w-0">
+                        <div class="text-[11px] ${isCopied ? 'text-stone-400 line-through' : 'text-stone-700'} font-normal truncate">
                             ${item.tag}
                         </div>
-                        <div class="text-[8px] text-[#A4907C] font-semibold mt-0.5 flex items-center gap-1">
-                            <span class="bg-[#E8F8F5] text-[#117A65] px-1 rounded border border-[#D1F2EB]">👁️ ${item.view}</span>
-                            <span class="bg-[#F4ECF7] text-[#6C3483] px-1 rounded border border-[#E8DAEF]">⭐ ${item.pts} PTS</span>
+                        <div class="text-[8px] text-stone-400 font-medium mt-0.5 flex items-center gap-1">
+                            <span>${item.view} views</span>
+                            <span>•</span>
+                            <span>${item.pts} pts</span>
+                            ${noteHTML}
                         </div>
-                        ${noteHTML}
                     </div>
                 `;
                 list.appendChild(div);
             });
         }
-        render();
+
+        function resetHistory(btn) {
+            const svg = btn.querySelector('svg');
+            svg.classList.add('spin-effect');
+            setTimeout(() => svg.classList.remove('spin-effect'), 500);
+            copiedHistory = [];
+            nextTargetIndex = 0;
+            localStorage.removeItem('rov_tag_history');
+            render();
+        }
+
+        fetchTags();
     </script>
-    <script src="security.js"></script>
 </body>
 </html>
