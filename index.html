@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RoV Tags Mini Deck</title>
+    <title>RoV Tags Mini Window</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
@@ -15,22 +15,21 @@
             user-select: none; 
             -webkit-user-select: none;
         }
-        /* ดีไซน์การ์ดมินิมอล */
         .cute-card { 
             background: #FFFFFF; 
             border: 2px solid #F3E9DC; 
-            border-radius: 14px;
-            box-shadow: 0 4px 6px rgba(164, 144, 124, 0.05);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(164, 144, 124, 0.04);
             transition: all 0.15s ease; 
             -webkit-tap-highlight-color: transparent; 
         }
-        /* คิวถัดไปที่ระบบแนะนำให้กดก๊อปปี้ต่อ */
+        /* คิวถัดไปที่ระบบแนะนำให้ก๊อปปี้ต่อ */
         .next-suggested {
             border-color: #FFD60A !important;
             box-shadow: 0 0 0 3px rgba(255, 214, 10, 0.35);
-            transform: scale(1.01);
+            background-color: #FFFDF4;
         }
-        /* เอฟเฟกต์ก๊อปปี้เสร็จแล้วกะพริบเปลี่ยนสี */
+        /* เอฟเฟกต์ตอนกดก๊อปปี้เสร็จ */
         .copied-flash { animation: flash 0.4s ease forwards; }
         @keyframes flash { 
             0% { background-color: #FFF; } 
@@ -39,26 +38,26 @@
         }
     </style>
 </head>
-<body class="p-3 flex flex-col items-center min-h-screen">
+<body class="p-2 flex flex-col items-center min-h-screen">
 
-    <div class="w-full max-w-md space-y-3">
-        <!-- ส่วนหัวขนาดกะทัดรัด ประหยัดพื้นที่หน้าต่างลอย -->
-        <header class="text-center py-3 border-b-2 border-dashed border-[#F3E9DC] mb-1">
-            <h1 class="text-xl font-bold text-[#4A3E3D]">
-                RoV <span class="text-[#FF6B6B] bg-[#FFF0F0] px-1.5 py-0.5 rounded-md text-base">Tag</span> Deck
+    <div class="w-full max-w-md space-y-2">
+        <!-- หัวข้อแบบเล็กพิเศษเพื่อประหยัดพื้นที่ในหน้าต่างลอย -->
+        <header class="text-center py-2 border-b-2 border-dashed border-[#F3E9DC] mb-1">
+            <h1 class="text-lg font-bold text-[#4A3E3D]">
+                RoV <span class="text-[#FF6B6B] bg-[#FFF0F0] px-1.5 py-0.5 rounded-md text-sm">Tag</span> Deck
             </h1>
-            <p class="text-[10px] text-[#A4907C] font-medium mt-1">
-                จิ้มปุ๊บก๊อปปี้ปั๊บ ระบบจะเลือกตัวถัดไปให้ทันที 🎀
+            <p class="text-[9px] text-[#A4907C] font-medium mt-0.5">
+                จิ้มก๊อปปี้รัวๆ ตัวต่อไปจะไฮไลท์ขอบสีเหลืองให้จ้า 🎀
             </p>
         </header>
 
         <!-- รายการแท็ก -->
-        <div id="listContainer" class="flex flex-col gap-2"></div>
+        <div id="listContainer" class="flex flex-col gap-1.5"></div>
     </div>
 
-    <!-- แจ้งเตือนสถานะการก๊อปปี้ลอยตรงกลางจอ -->
-    <div id="toast" class="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#FF8BAB] text-white px-5 py-2.5 rounded-full font-bold shadow-xl transition-all duration-300 opacity-0 pointer-events-none z-50 text-xs border-2 border-white">
-        คัดลอกเรียบร้อย! ✨
+    <!-- แจ้งเตือนสั้นๆ ด่วนๆ บนหน้าต่างลอย -->
+    <div id="toast" class="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#FF8BAB] text-white px-4 py-2 rounded-full font-bold shadow-xl transition-all duration-200 opacity-0 pointer-events-none z-50 text-[11px] border border-white">
+        คัดลอกแล้วจ้า! 📋
     </div>
 
     <script>
@@ -90,7 +89,7 @@
                 const clipNum = String(i + 1).padStart(2, '0');
                 const div = document.createElement('div');
                 div.id = `card-${i}`;
-                div.className = `cute-card w-full p-3 flex items-center gap-3 cursor-pointer select-none`;
+                div.className = `cute-card w-full p-2.5 flex items-center gap-2.5 cursor-pointer select-none`;
                 
                 if (i === 0) div.classList.add('next-suggested');
                 
@@ -106,7 +105,7 @@
                         toast.style.opacity = "1";
                         setTimeout(() => toast.style.opacity = "0", 600);
 
-                        // เลื่อนคิวไฮไลท์ไปยังตัวถัดไปอัตโนมัติ
+                        // ระบบช่วยเลื่อนคิวขอบสีเหลืองไปใบถัดไปอัตโนมัติ
                         const nextIndex = i + 1;
                         if (nextIndex < tagData.length) {
                             const nextCard = document.getElementById(`card-${nextIndex}`);
@@ -119,19 +118,19 @@
                     });
                 };
 
-                const noteHTML = item.note ? `<div class="text-[10px] text-[#FF8BAB] font-medium mt-0.5 bg-[#FFF5F7] px-1.5 py-0.5 rounded inline-block border border-[#FFE3E8] italic">💡 ${item.note}</div>` : '';
+                const noteHTML = item.note ? `<div class="text-[9px] text-[#FF8BAB] font-medium mt-0.5 bg-[#FFF5F7] px-1.5 py-0.2 rounded inline-block border border-[#FFE3E8] italic">💡 ${item.note}</div>` : '';
 
                 div.innerHTML = `
-                    <div class="bg-[#FEF9E7] border border-[#F9E79F] text-[#B7950B] w-8 h-8 flex items-center justify-center rounded-xl text-xs font-bold flex-shrink-0">
+                    <div class="bg-[#FEF9E7] border border-[#F9E79F] text-[#B7950B] w-7 h-7 flex items-center justify-center rounded-lg text-xs font-bold flex-shrink-0">
                         ${clipNum}
                     </div>
                     <div class="flex-grow">
-                        <div class="text-xs text-[#4A3E3D] font-medium leading-relaxed tracking-wide">
+                        <div class="text-[11px] text-[#4A3E3D] font-medium leading-normal tracking-wide">
                             ${item.tag}
                         </div>
-                        <div class="text-[9px] text-[#A4907C] uppercase font-semibold mt-0.5 flex items-center gap-1">
-                            <span class="bg-[#E8F8F5] text-[#117A65] px-1 py-0.2 rounded border border-[#D1F2EB]">👁️ ${item.view}</span>
-                            <span class="bg-[#F4ECF7] text-[#6C3483] px-1 py-0.2 rounded border border-[#E8DAEF]">⭐ ${item.pts} PTS</span>
+                        <div class="text-[8px] text-[#A4907C] font-semibold mt-0.5 flex items-center gap-1">
+                            <span class="bg-[#E8F8F5] text-[#117A65] px-1 rounded border border-[#D1F2EB]">👁️ ${item.view}</span>
+                            <span class="bg-[#F4ECF7] text-[#6C3483] px-1 rounded border border-[#E8DAEF]">⭐ ${item.pts} PTS</span>
                         </div>
                         ${noteHTML}
                     </div>
