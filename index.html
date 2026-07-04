@@ -34,7 +34,7 @@
         body.dark-mode .note-tag { background-color: #42371C; color: #F5D061; border: 1px solid #574922; }
         body.dark-mode .pixel-pet { opacity: 0.35; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)); }
 
-        /* ⚡ ไมโครแอนิเมชันตอนกดการ์ด */
+        /* ⚡ แอนิเมชันตอนกด */
         .minimal-card {
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), 
                         background-color 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
@@ -43,7 +43,7 @@
         }
         .minimal-card:active { transform: scale(0.96); }
 
-        /* 🚨 คิวถัดไปแบบ Ultra Smooth Pulse */
+        /* 🚨 คิวถัดไป */
         .next-suggested {
             border: 2px solid #FF4D6D !important;
             background-color: #FFFEE0 !important;
@@ -78,7 +78,6 @@
         }
         #toast.show { opacity: 1; transform: translate(-50%, 0); }
 
-        /* 👾 สไตล์ตัวละครพิกเซลเดี่ยวขยับดุ๊กดิ๊ก */
         .pixel-pet-container {
             position: fixed;
             bottom: 12px;
@@ -102,7 +101,7 @@
 </head>
 <body class="p-2 flex flex-col items-center min-h-screen light-mode">
 
-    <!-- 👾 ตัวละครพิกเซลตัวเดียวขยับดุ๊กดิ๊กที่มุมจอ (น้องแมวสไลม์พิกเซลอาร์ต) -->
+    <!-- 👾 น้องพิกเซลดุ๊กดิ๊กมุมจอ -->
     <div class="pixel-pet-container">
         <svg class="pixel-pet" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M3 5h2v1H3V5zm8 0h2v1h-2V5z" fill="#FF758F"/>
@@ -134,6 +133,14 @@
             </div>
         </header>
 
+        <!-- 🔊 แผงเลือกโปรไฟล์เสียง (Sound Profiles) ดักจับอารมณ์ -->
+        <div class="bg-toggle grid grid-cols-3 gap-1 p-1 rounded-lg text-center border text-[9px] font-medium transition-colors mb-1.5">
+            <button id="sndSquishy" onclick="setSoundProfile('squishy')" class="py-1 rounded-md bg-white dark:bg-[#4A3E3B] text-stone-700 dark:text-stone-200 shadow-sm transition-all">🧸 Squishy</button>
+            <button id="sndKeyboard" onclick="setSoundProfile('keyboard')" class="py-1 rounded-md text-stone-400 transition-all">⌨️ Keyboard</button>
+            <button id="sndWax" onclick="setSoundProfile('wax')" class="py-1 rounded-md text-stone-400 transition-all">🕯️ Wax / Slime</button>
+        </div>
+
+        <!-- ตัวเลือกโหมดการคัดลอกสำหรับ TikTok -->
         <div class="bg-toggle grid grid-cols-2 gap-1 p-1 rounded-lg text-center border transition-colors">
             <button id="btnModeFull" onclick="setCopyMode('full')" class="text-[10px] font-medium py-1 rounded-md bg-white dark:bg-[#4A3E3B] shadow-sm text-stone-700 dark:text-stone-200 transition-all">📋 ข้อความเต็ม</button>
             <button id="btnModeOnly" onclick="setCopyMode('only')" class="text-[10px] font-medium py-1 rounded-md text-stone-400 transition-all">🎵 เฉพาะแท็กไป TikTok</button>
@@ -152,31 +159,105 @@
 
         let tagData = [];
         let copyMode = 'full'; 
+        let soundProfile = localStorage.getItem('rov_sound_profile') || 'squishy';
         let copiedHistory = JSON.parse(localStorage.getItem('rov_tag_history')) || [];
         let nextTargetIndex = copiedHistory.length > 0 ? Math.max(...copiedHistory) + 1 : 0;
 
-        // 🔊 ระบบสังเคราะห์เสียงบีบสกุชชี่ (Squishy Web Audio Synthesizer)
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSquishySound() {
+
+        // 🔊 ระบบสร้างเสียง ASMR หลายมิติ
+        function triggerSound() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
+            const now = audioCtx.currentTime;
             
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
+            if (soundProfile === 'squishy') {
+                // 🧸 1. เสียงบีบสกุชชี่หนืดหนับ
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(140, now);
+                osc.frequency.exponentialRampToValueAtTime(360, now + 0.12);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.16);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(now + 0.16);
+                
+            } else if (soundProfile === 'keyboard') {
+                // ⌨️ 2. เสียงคีย์บอร์ดครีมมี่ทุ้มแน่น (Linear Switch)
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(110, now);
+                osc.frequency.exponentialRampToValueAtTime(70, now + 0.06);
+                
+                // เติมคลื่นเสียงรบกวนจิ๋วๆ (Noise) จำลองเสียงบอดี้กระทบ
+                const bufferSize = audioCtx.sampleRate * 0.04;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const noiseGain = audioCtx.createGain();
+                
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+                noiseGain.gain.setValueAtTime(0.12, now);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+                
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                noise.connect(noiseGain); noiseGain.connect(audioCtx.destination);
+                
+                osc.start(); osc.stop(now + 0.07);
+                noise.start(); noise.stop(now + 0.03);
+                
+            } else if (soundProfile === 'wax') {
+                // 🕯️ 3. เสียงแว็กซ์/สไลม์ กะเทาะแตกเปรี๊ยะ
+                const baseOsc = audioCtx.createOscillator();
+                const baseGain = audioCtx.createGain();
+                baseOsc.type = 'triangle';
+                baseOsc.frequency.setValueAtTime(80, now);
+                baseGain.gain.setValueAtTime(0.4, now);
+                baseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                baseOsc.connect(baseGain); baseGain.connect(audioCtx.destination);
+                baseOsc.start(); baseOsc.stop(now + 0.12);
+                
+                // สุ่มสร้างเสียง Crackle จิ๋วๆ 3 เม็ดซ้อนกันเร็วๆ จำลองเสียงเนื้อแว็กซ์แตกตัว
+                for (let i = 0; i < 4; i++) {
+                    const clickDelay = now + (i * 0.02) + (Math.random() * 0.01);
+                    const crackle = audioCtx.createOscillator();
+                    const crackleGain = audioCtx.createGain();
+                    crackle.type = 'sine';
+                    crackle.frequency.setValueAtTime(800 + (Math.random() * 600), clickDelay);
+                    crackleGain.gain.setValueAtTime(0.08, clickDelay);
+                    crackleGain.gain.exponentialRampToValueAtTime(0.001, clickDelay + 0.015);
+                    crackle.connect(crackleGain); crackleGain.connect(audioCtx.destination);
+                    crackle.start(clickDelay); crackle.stop(clickDelay + 0.015);
+                }
+            }
+        }
+
+        function setSoundProfile(profile) {
+            soundProfile = profile;
+            localStorage.setItem('rov_sound_profile', profile);
+            triggerSound(); // กดปุ่มแล้วเทสต์เสียงให้ฟังทันที
             
-            // ปรับคลื่นเสียงให้ออกมาเป็นเสียงนุ่มหนึบหนับแบบสกุชชี่โดนบีบ
-            osc.type = 'triangle'; 
-            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-            // ไล่สไลด์โทนเสียงขึ้นเพื่อสร้างมิติความหนืด
-            osc.frequency.exponentialRampToValueAtTime(380, audioCtx.currentTime + 0.15);
+            const buttons = {
+                squishy: document.getElementById('sndSquishy'),
+                keyboard: document.getElementById('sndKeyboard'),
+                wax: document.getElementById('sndWax')
+            };
             
-            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.18);
+            const isDark = document.body.classList.contains('dark-mode');
+            const activeClass = isDark ? "bg-[#4A3E3B] text-stone-200 shadow-sm" : "bg-white text-stone-700 shadow-sm";
             
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.18);
+            Object.keys(buttons).forEach(k => {
+                if (k === profile) {
+                    buttons[k].className = `py-1 rounded-md transition-all ${activeClass}`;
+                } else {
+                    buttons[k].className = "py-1 rounded-md text-stone-400 transition-all";
+                }
+            });
         }
 
         function initTheme() {
@@ -189,7 +270,7 @@
         }
 
         function toggleTheme() {
-            playSquishySound(); // เพิ่มเสียงตอนกดสลับธีมด้วย
+            triggerSound();
             if (document.body.classList.contains('light-mode')) {
                 document.body.classList.replace('light-mode', 'dark-mode');
                 localStorage.setItem('rov_theme', 'dark');
@@ -202,6 +283,7 @@
                 document.getElementById('iconMoon').classList.remove('hidden');
             }
             setCopyMode(copyMode); 
+            setSoundProfile(soundProfile);
             render(); 
         }
 
@@ -224,7 +306,6 @@
         function parseCSV(text) {
             const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => line);
             if (lines.length === 0) return [];
-            
             const splitLine = (line) => {
                 const result = []; let current = ''; let inQuotes = false;
                 for (let i = 0; i < line.length; i++) {
@@ -236,7 +317,6 @@
                 result.push(current.trim());
                 return result.map(v => v.replace(/^"|"$/g, '').trim());
             };
-
             const headers = splitLine(lines[0]).map(h => h.toLowerCase());
             return lines.slice(1).map(line => {
                 const values = splitLine(line); let obj = {};
@@ -250,7 +330,6 @@
             if (window.location.protocol === 'file:') {
                 targetUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(sheetCsvUrl);
             }
-
             try {
                 const response = await fetch(targetUrl);
                 if (!response.ok) throw new Error('Network response was not ok');
@@ -294,7 +373,7 @@
                     ${isNext ? 'next-suggested' : ''}`;
                 
                 div.onclick = () => {
-                    playSquishySound(); // ⚡ ส่งเสียงบีบสกุชชี่ทันทีที่กดจิ้ม
+                    triggerSound(); // ⚡ เล่นเสียง ASMR ที่คุณสลับเลือกไว้
                     
                     const textToCopy = (copyMode === 'full') 
                         ? `คลิปที่ ${clipNum}: ${item.tag} (View ${item.view})` 
@@ -345,7 +424,7 @@
         }
 
         function resetHistory(btn) {
-            playSquishySound();
+            triggerSound();
             const svg = btn.querySelector('svg');
             svg.classList.add('spin-effect');
             setTimeout(() => svg.classList.remove('spin-effect'), 600);
@@ -356,6 +435,7 @@
         }
 
         initTheme();
+        setSoundProfile(soundProfile);
         fetchTags();
     </script>
 </body>
