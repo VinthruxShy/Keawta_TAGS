@@ -12,68 +12,36 @@
             overflow-x: hidden; 
             user-select: none; 
             -webkit-user-select: none;
-            transition: color 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: background-color 0.4s cubic-bezier(0.25, 1, 0.5, 1), color 0.4s cubic-bezier(0.25, 1, 0.5, 1);
             position: relative;
         }
-
-        /* 🌸 เอฟเฟกต์พื้นหลัง Pixel ขยับได้ */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1;
-            background-size: 20px 20px;
-            animation: pixelMove 25s linear infinite;
-            transition: background 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease;
-        }
         
-        /* ☀️ พิกเซลโหมดสว่าง */
-        body.light-mode::before {
-            background-color: #FAF6EE;
-            background-image: 
-                radial-gradient(#FFD6E0 20%, transparent 20%),
-                radial-gradient(#FFF0F5 20%, transparent 20%);
-            background-position: 0 0, 10px 10px;
-            opacity: 0.85;
-        }
-        body.light-mode { color: #4A4342; }
+        /* ☀️ โหมดสว่าง */
+        body.light-mode { background-color: #FAF6EE; color: #4A4342; }
         body.light-mode .minimal-card { background: rgba(255, 255, 255, 0.95); border: 1px solid #EAE1D4; backdrop-filter: blur(4px); }
         body.light-mode .already-copied { background-color: rgba(244, 239, 230, 0.6) !important; border-color: #DCD5C9 !important; }
         body.light-mode .text-main { color: #4A4342; }
         body.light-mode .bg-toggle { background-color: rgba(243, 236, 224, 0.8); border-color: #E6DCCD; }
         body.light-mode .note-tag { background-color: #FEF5D1; color: #B57C1E; border: 1px solid #FBE7A1; }
+        body.light-mode .pixel-pet { opacity: 0.9; filter: drop-shadow(0 4px 6px rgba(181, 124, 30, 0.15)); }
 
-        /* 🌙 พิกเซลโหมดมืด */
-        body.dark-mode::before {
-            background-color: #1A1816;
-            background-image: 
-                radial-gradient(rgba(255, 117, 143, 0.12) 20%, transparent 20%),
-                radial-gradient(rgba(245, 208, 97, 0.06) 20%, transparent 20%);
-            background-position: 0 0, 10px 10px;
-            opacity: 1;
-        }
-        body.dark-mode { color: #E8E2D9; }
+        /* 🌙 โหมดมืด */
+        body.dark-mode { background-color: #1A1816; color: #E8E2D9; }
         body.dark-mode .minimal-card { background: rgba(38, 34, 31, 0.95); border: 1px solid #3D3631; backdrop-filter: blur(4px); }
         body.dark-mode .already-copied { background-color: rgba(21, 19, 18, 0.5) !important; border-color: #282422 !important; opacity: 0.4; }
         body.dark-mode .text-main { color: #E8E2D9; }
         body.dark-mode .bg-toggle { background-color: rgba(40, 36, 34, 0.8); border-color: #3D3631; }
         body.dark-mode .note-tag { background-color: #42371C; color: #F5D061; border: 1px solid #574922; }
+        body.dark-mode .pixel-pet { opacity: 0.35; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)); }
 
-        @keyframes pixelMove {
-            0% { background-position: 0 0, 10px 10px; }
-            100% { background-position: 500px -500px, 510px -490px; }
-        }
-
-        /* ⚡ การ์ดมินิมอล + ไมโครแอนิเมชันสปริงเบาๆ */
+        /* ⚡ ไมโครแอนิเมชันตอนกดการ์ด */
         .minimal-card {
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), 
                         background-color 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
                         border-color 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
                         box-shadow 0.4s ease;
         }
-        .minimal-card:active {
-            transform: scale(0.97);
-        }
+        .minimal-card:active { transform: scale(0.96); }
 
         /* 🚨 คิวถัดไปแบบ Ultra Smooth Pulse */
         .next-suggested {
@@ -94,37 +62,62 @@
             100% { border-color: #FF4D6D; box-shadow: 0 4px 12px rgba(255, 77, 109, 0.15); }
         }
         
-        /* 🟩 เอฟเฟกต์แฟลชตอนก๊อปปี้สำเร็จแบบสมูทคลายตัว */
         .copied-flash { animation: flashSmooth 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes flashSmooth { 
-            0% { background-color: #FFE5EC; border-color: #FF4D6D; transform: scale(0.97); } 
+            0% { background-color: #FFE5EC; border-color: #FF4D6D; transform: scale(0.96); } 
             40% { background-color: #F0FBF4; border-color: #A3E635; transform: scale(1.01); }
             100% { transform: scale(1); } 
         }
 
-        /* 🔄 แอนิเมชันปุ่มรีเซ็ต */
         .spin-effect { animation: spin 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
         @keyframes spin { 100% { transform: rotate(-360deg); } }
 
-        /* 🎀 เอฟเฟกต์ Toast แบบลอยสไลด์นุ่มๆ */
         #toast {
             transform: translate(-50%, 20px);
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
         }
-        #toast.show {
-            opacity: 1;
-            transform: translate(-50%, 0);
+        #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+        /* 👾 สไตล์ตัวละครพิกเซลเดี่ยวขยับดุ๊กดิ๊ก */
+        .pixel-pet-container {
+            position: fixed;
+            bottom: 12px;
+            right: 12px;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .pixel-pet {
+            width: 48px;
+            height: 48px;
+            image-rendering: pixelated;
+            animation: petFloat 2.5s infinite ease-in-out;
+            transition: opacity 0.4s ease;
+        }
+        @keyframes petFloat {
+            0% { transform: translateY(0) scaleY(1); }
+            50% { transform: translateY(-6px) scaleY(0.9) scaleX(1.05); }
+            100% { transform: translateY(0) scaleY(1); }
         }
     </style>
 </head>
 <body class="p-2 flex flex-col items-center min-h-screen light-mode">
+
+    <!-- 👾 ตัวละครพิกเซลตัวเดียวขยับดุ๊กดิ๊กที่มุมจอ (น้องแมวสไลม์พิกเซลอาร์ต) -->
+    <div class="pixel-pet-container">
+        <svg class="pixel-pet" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 5h2v1H3V5zm8 0h2v1h-2V5z" fill="#FF758F"/>
+            <path d="M2 6h12v6H2V6z" fill="#FFF"/>
+            <path d="M4 8h2v1H4V8zm6 0h2v1h-2V8z" fill="#4A4342"/>
+            <path d="M7 10h2v1H7v-1z" fill="#FF758F"/>
+            <path d="M1 12h14v2H1v-2z" fill="#FFE5EC"/>
+        </svg>
+    </div>
 
     <div class="w-full max-w-sm space-y-2 p-1">
         <header class="text-center py-2 border-b border-stone-200 dark:border-stone-700 mb-1 flex justify-between items-center px-1">
             <span class="text-xs font-bold text-stone-400 dark:text-stone-500 tracking-wide">ROV <span class="text-[#FF758F]">TAGS LIVE</span></span>
             
             <div class="flex items-center gap-1.5">
-                <!-- 🌓 ปุ่มสลับโหมดมืด/สว่าง -->
                 <button onclick="toggleTheme()" id="themeBtn" title="สลับโหมดมืด/สว่าง" class="w-6 h-6 flex items-center justify-center rounded-full bg-white dark:bg-[#26221F] border border-stone-200 dark:border-stone-700 text-stone-400 hover:text-[#FF758F] active:scale-90 transition-all shadow-sm">
                     <svg id="iconMoon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"></path>
@@ -133,8 +126,6 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M7.05 16.95l-1.414 1.414M18.364 18.364l-1.414-1.414M7.05 7.05L5.636 5.636m12.728 12.728A9 9 0 1111 3v2a7 7 0 106 6h2z"></path>
                     </svg>
                 </button>
-
-                <!-- ปุ่มรีเซ็ตประวัติ -->
                 <button onclick="resetHistory(this)" title="ล้างประวัติการคัดลอก" class="w-6 h-6 flex items-center justify-center rounded-full bg-white dark:bg-[#26221F] border border-stone-200 dark:border-stone-700 text-stone-400 hover:text-[#FF4D6D] hover:border-[#FF4D6D] active:scale-90 transition-all shadow-sm">
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"></path>
@@ -143,7 +134,6 @@
             </div>
         </header>
 
-        <!-- ตัวเลือกโหมดการคัดลอกสำหรับ TikTok -->
         <div class="bg-toggle grid grid-cols-2 gap-1 p-1 rounded-lg text-center border transition-colors">
             <button id="btnModeFull" onclick="setCopyMode('full')" class="text-[10px] font-medium py-1 rounded-md bg-white dark:bg-[#4A3E3B] shadow-sm text-stone-700 dark:text-stone-200 transition-all">📋 ข้อความเต็ม</button>
             <button id="btnModeOnly" onclick="setCopyMode('only')" class="text-[10px] font-medium py-1 rounded-md text-stone-400 transition-all">🎵 เฉพาะแท็กไป TikTok</button>
@@ -153,7 +143,6 @@
         <div id="listContainer" class="flex flex-col gap-1.5"></div>
     </div>
 
-    <!-- แจ้งเตือนคัดลอกสำเร็จสไตล์ลอยนุ่มนวล -->
     <div id="toast" class="fixed bottom-12 left-1/2 bg-[#FF758F] text-white px-5 py-2 rounded-full shadow-lg opacity-0 pointer-events-none z-50 text-[10px] tracking-wider font-semibold">
         COPIED PABS! ✨
     </div>
@@ -166,6 +155,30 @@
         let copiedHistory = JSON.parse(localStorage.getItem('rov_tag_history')) || [];
         let nextTargetIndex = copiedHistory.length > 0 ? Math.max(...copiedHistory) + 1 : 0;
 
+        // 🔊 ระบบสังเคราะห์เสียงบีบสกุชชี่ (Squishy Web Audio Synthesizer)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSquishySound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            // ปรับคลื่นเสียงให้ออกมาเป็นเสียงนุ่มหนึบหนับแบบสกุชชี่โดนบีบ
+            osc.type = 'triangle'; 
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            // ไล่สไลด์โทนเสียงขึ้นเพื่อสร้างมิติความหนืด
+            osc.frequency.exponentialRampToValueAtTime(380, audioCtx.currentTime + 0.15);
+            
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.18);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.18);
+        }
+
         function initTheme() {
             const savedTheme = localStorage.getItem('rov_theme') || 'light';
             if (savedTheme === 'dark') {
@@ -176,6 +189,7 @@
         }
 
         function toggleTheme() {
+            playSquishySound(); // เพิ่มเสียงตอนกดสลับธีมด้วย
             if (document.body.classList.contains('light-mode')) {
                 document.body.classList.replace('light-mode', 'dark-mode');
                 localStorage.setItem('rov_theme', 'dark');
@@ -240,14 +254,12 @@
             try {
                 const response = await fetch(targetUrl);
                 if (!response.ok) throw new Error('Network response was not ok');
-                
                 let dataText = "";
                 if (window.location.protocol === 'file:') {
                     const json = await response.json(); dataText = json.contents;
                 } else {
                     dataText = await response.text();
                 }
-
                 tagData = parseCSV(dataText);
                 document.getElementById('loading').style.display = 'none';
                 render();
@@ -259,13 +271,8 @@
         function showToast() {
             const toast = document.getElementById('toast');
             toast.classList.add('show');
-            
-            // ล้างไทม์เมอร์ตัวเก่าออกหากมีการรัวนิ้วกดซ้ำ
             if (window.toastTimeout) clearTimeout(window.toastTimeout);
-            
-            window.toastTimeout = setTimeout(() => {
-                toast.classList.remove('show');
-            }, 800);
+            window.toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 800);
         }
 
         function render() {
@@ -287,6 +294,8 @@
                     ${isNext ? 'next-suggested' : ''}`;
                 
                 div.onclick = () => {
+                    playSquishySound(); // ⚡ ส่งเสียงบีบสกุชชี่ทันทีที่กดจิ้ม
+                    
                     const textToCopy = (copyMode === 'full') 
                         ? `คลิปที่ ${clipNum}: ${item.tag} (View ${item.view})` 
                         : item.tag;
@@ -297,22 +306,16 @@
                             localStorage.setItem('rov_tag_history', JSON.stringify(copiedHistory));
                         }
                         
-                        // ถอดสถานะคิวเก่าและรันฟังก์ชันแฟลชแบบสมูท
                         div.classList.remove('next-suggested');
                         div.classList.add('copied-flash');
                         showToast();
 
-                        // หน่วงเวลาให้ตัวการ์ดรันแอนิเมชันแฟลชเสร็จสิ้นแบบเนียนตา ก่อนอัปเดตสลับใบถัดไป
                         setTimeout(() => {
                             nextTargetIndex = i + 1;
                             render();
-                            
-                            // ระบบโฟกัสและขยับหน้าจอแบบลื่นไหลพิเศษ
                             setTimeout(() => {
                                 const nextCard = document.getElementById('card-' + nextTargetIndex);
-                                if (nextCard) {
-                                    nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                }
+                                if (nextCard) nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             }, 50);
                         }, 250);
                     });
@@ -342,6 +345,7 @@
         }
 
         function resetHistory(btn) {
+            playSquishySound();
             const svg = btn.querySelector('svg');
             svg.classList.add('spin-effect');
             setTimeout(() => svg.classList.remove('spin-effect'), 600);
