@@ -50,14 +50,13 @@
 </head>
 <body class="p-2 flex flex-col items-center min-h-screen">
 
-    <!-- กล่องครอบเนื้อหาหลักทั้งหมดที่จะใช้อ้างอิงตอนทำหน้าต่างลอย -->
     <div id="pipContainer" class="w-full max-w-sm space-y-2 p-2 bg-[#FAF8F5]">
         <header class="text-center py-2 border-b border-stone-200 mb-1 flex justify-between items-center px-1">
             <span class="text-xs font-bold text-stone-400 tracking-wide">ROV <span class="text-[#FF758F]">TAGS LIVE</span></span>
             
             <div class="flex items-center gap-1.5">
-                <!-- ✨ ปุ่มเปิดหน้าต่างลอยสุดล้ำ -->
-                <button onclick="enterPiP()" id="pipBtn" title="เปิดหน้าต่างลอยทับแอปอื่น" class="w-6 h-6 flex items-center justify-center rounded-full bg-white border border-stone-200 text-stone-400 hover:text-[#FF4D6D] hover:border-[#FF4D6D] active:scale-90 transition-all shadow-sm">
+                <!-- ✨ ปุ่มเปิดหน้าต่างลอย (รองรับทั้ง PC และมือถือ) -->
+                <button onclick="handleFloatWindow()" id="pipBtn" title="เปิดหน้าต่างลอยทับแอปอื่น" class="w-6 h-6 flex items-center justify-center rounded-full bg-white border border-stone-200 text-stone-400 hover:text-[#FF4D6D] hover:border-[#FF4D6D] active:scale-90 transition-all shadow-sm">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 9h6v6M3 11v6a2 2 0 002 2h6M21 13V7a2 2 0 00-2-2h-6M10 14L21 3"></path>
                     </svg>
@@ -71,7 +70,6 @@
             </div>
         </header>
 
-        <!-- ตัวเลือกโหมดการคัดลอกสำหรับ TikTok -->
         <div class="grid grid-cols-2 gap-1 bg-stone-100 p-1 rounded-lg text-center border border-stone-200">
             <button id="btnModeFull" onclick="setCopyMode('full')" class="text-[10px] font-medium py-1 rounded-md bg-white shadow-sm text-stone-700 transition-all">📋 ข้อความเต็ม</button>
             <button id="btnModeOnly" onclick="setCopyMode('only')" class="text-[10px] font-medium py-1 rounded-md text-stone-400 transition-all">🎵 เฉพาะแท็กไป TikTok</button>
@@ -94,10 +92,25 @@
         let nextTargetIndex = copiedHistory.length > 0 ? Math.max(...copiedHistory) + 1 : 0;
         let pipWindow = null;
 
-        // ⚡ ฟังก์ชันสั่งเปิดหน้าต่างลอยแยกส่วนภายนอกเบราว์เซอร์
-        async function enterPiP() {
+        // ⚡ ตรวจสอบว่าใช้งานผ่านมือถือหรือไม่
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        // ⚡ ฟังก์ชันหลักสำหรับปุ่มเปิดหน้าต่างลอย
+        async function handleFloatWindow() {
+            // กรณีเป็นมือถือ: คัดลอกลิงก์ให้อัตโนมัติเพื่อเอาไปเปิดในแอป Floating Browser
+            if (isMobileDevice()) {
+                const currentUrl = window.location.href;
+                navigator.clipboard.writeText(currentUrl).then(() => {
+                    alert("🔗 คัดลอกลิงก์ของหน้าเว็บนี้แล้วจ้า!\n\n💡 วิธีใช้งานบนมือถือ:\n1. เปิดแอปเบราว์เซอร์ลอยตัว (เช่น Floating Browser)\n2. วางลิงก์นี้ลงไปเพื่อเปิดหน้าต่างจิ๋วทับเกมหรือแอปอื่นได้เลยครับ");
+                });
+                return;
+            }
+
+            // กรณีเป็นคอมพิวเตอร์ PC/Mac: เปิด PiP แบบเดิม
             if (!('documentPictureInPicture' in window)) {
-                alert('⚠️ เบราว์เซอร์ของคุณยังไม่รองรับระบบหน้าต่างลอยโดยตรง แนะนำให้เปิดผ่าน Google Chrome หรือเปิดโหมดป๊อปอัปของระบบมือถือแทนครับ');
+                alert('⚠️ เบราว์เซอร์คอมพิวเตอร์ของคุณยังไม่รองรับระบบหน้าต่างลอย แนะนำให้เปิดผ่าน Google Chrome ครับ');
                 return;
             }
 
@@ -106,13 +119,8 @@
                 return;
             }
 
-            // สร้างหน้าต่างลอยขนาดมินิ
-            pipWindow = await window.documentPictureInPicture.requestWindow({
-                width: 360,
-                height: 500,
-            });
+            pipWindow = await window.documentPictureInPicture.requestWindow({ width: 360, height: 500 });
 
-            // คัดลอกสไตล์ชีทจากหน้าหลักไปใส่หน้าต่างลอย
             [...document.styleSheets].forEach((styleSheet) => {
                 try {
                     const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
@@ -121,27 +129,22 @@
                     pipWindow.document.head.appendChild(style);
                 } catch (e) {
                     const link = document.createElement('link');
-                    link.rel = 'stylesheet';
-                    link.href = styleSheet.href;
+                    link.rel = 'stylesheet'; link.href = styleSheet.href;
                     pipWindow.document.head.appendChild(link);
                 }
             });
             
-            // ดึงฟอนต์และสไตล์เพิ่ม
             const fontLink = document.createElement('link');
             fontLink.href = "https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap";
             fontLink.rel = "stylesheet";
             pipWindow.document.head.appendChild(fontLink);
 
-            // ย้ายคอนเทนเนอร์หลักเข้าไปในหน้าต่างลอย
             const container = document.getElementById('pipContainer');
             pipWindow.document.body.appendChild(container);
             pipWindow.document.body.style.backgroundColor = "#FAF8F5";
             
-            // เปลี่ยนปุ่มเปิดให้เป็นปุ่มปิดหน้าต่างลอยแทน
             pipWindow.document.getElementById('pipBtn').innerHTML = `<svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>`;
 
-            // ดักเหตุการณ์ตอนปิดหน้าต่างลอย ให้ย้ายคอนเทนเนอร์กลับมาหน้าหลัก
             pipWindow.addEventListener('pagehide', () => {
                 pipWindow = null;
                 document.body.appendChild(container);
@@ -168,32 +171,21 @@
             if (lines.length === 0) return [];
             
             const splitLine = (line) => {
-                const result = [];
-                let current = '';
-                let inQuotes = false;
+                const result = []; let current = ''; let inQuotes = false;
                 for (let i = 0; i < line.length; i++) {
                     const char = line[i];
-                    if (char === '"') {
-                        inQuotes = !inQuotes;
-                    } else if (char === ',' && !inQuotes) {
-                        result.push(current.trim());
-                        current = '';
-                    } else {
-                        current += char;
-                    }
+                    if (char === '"') { inQuotes = !inQuotes; } 
+                    else if (char === ',' && !inQuotes) { result.push(current.trim()); current = ''; } 
+                    else { current += char; }
                 }
                 result.push(current.trim());
                 return result.map(v => v.replace(/^"|"$/g, '').trim());
             };
 
             const headers = splitLine(lines[0]).map(h => h.toLowerCase());
-            
             return lines.slice(1).map(line => {
-                const values = splitLine(line);
-                let obj = {};
-                headers.forEach((header, i) => {
-                    obj[header] = values[i] || "";
-                });
+                const values = splitLine(line); let obj = {};
+                headers.forEach((header, i) => { obj[header] = values[i] || ""; });
                 return obj;
             });
         }
@@ -210,8 +202,7 @@
                 
                 let dataText = "";
                 if (window.location.protocol === 'file:') {
-                    const json = await response.json();
-                    dataText = json.contents;
+                    const json = await response.json(); dataText = json.contents;
                 } else {
                     dataText = await response.text();
                 }
@@ -223,7 +214,6 @@
             } catch (error) {
                 const doc = pipWindow ? pipWindow.document : document;
                 doc.getElementById('loading').innerText = "❌ โหลดข้อมูลล้มเหลว";
-                console.error(error);
             }
         }
 
@@ -259,7 +249,6 @@
                         div.classList.remove('next-suggested');
                         div.classList.add('copied-flash');
                         
-                        // แสดง Toast แจ้งเตือน ทั้งหน้าหลักและหน้าต่างลอย
                         const targetToast = document.getElementById('toast');
                         targetToast.style.opacity = "1";
                         setTimeout(() => targetToast.style.opacity = "0", 500);
