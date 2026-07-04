@@ -60,10 +60,13 @@
             </button>
         </header>
 
-        <!-- แสดงสถานะการโหลดข้อมูล -->
-        <div id="loading" class="text-center text-xs text-stone-400 py-8">กำลังดึงข้อมูลล่าสุดจากระบบ... ⏱️</div>
+        <!-- 🎚️ ตัวเลือกโหมดการคัดลอกสำหรับ TikTok -->
+        <div class="grid grid-cols-2 gap-1 bg-stone-100 p-1 rounded-lg text-center border border-stone-200">
+            <button id="btnModeFull" onclick="setCopyMode('full')" class="text-[10px] font-medium py-1 rounded-md bg-white shadow-sm text-stone-700 transition-all">📋 ข้อความเต็ม</button>
+            <button id="btnModeOnly" onclick="setCopyMode('only')" class="text-[10px] font-medium py-1 rounded-md text-stone-400 transition-all">🎵 เฉพาะแท็กไปวาง TikTok</button>
+        </div>
 
-        <!-- รายการแท็ก -->
+        <div id="loading" class="text-center text-xs text-stone-400 py-8">กำลังดึงข้อมูลล่าสุดจากระบบ... ⏱️</div>
         <div id="listContainer" class="flex flex-col gap-1.5"></div>
     </div>
 
@@ -75,15 +78,27 @@
         const sheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQLhkH6_H32hlVLnqQbTt_fMuSTfovUJgzhQm_yeTRPew6vwdP59OJQvs10psW_NH6ewOc-42UKNI75/pub?output=csv";
 
         let tagData = [];
+        let copyMode = 'full'; // 'full' หรือ 'only'
         let copiedHistory = JSON.parse(localStorage.getItem('rov_tag_history')) || [];
         let nextTargetIndex = copiedHistory.length > 0 ? Math.max(...copiedHistory) + 1 : 0;
 
-        // 🛠️ ปรับปรุงตัวแปลงไฟล์ CSV ใหม่ให้เสถียร ไม่เอ๋อเวลาเจอกลุ่มแฮชแท็ก
+        function setCopyMode(mode) {
+            copyMode = mode;
+            const btnFull = document.getElementById('btnModeFull');
+            const btnOnly = document.getElementById('btnModeOnly');
+            if (mode === 'full') {
+                btnFull.className = "text-[10px] font-medium py-1 rounded-md bg-white shadow-sm text-stone-700 transition-all";
+                btnOnly.className = "text-[10px] font-medium py-1 rounded-md text-stone-400 transition-all";
+            } else {
+                btnFull.className = "text-[10px] font-medium py-1 rounded-md text-stone-400 transition-all";
+                btnOnly.className = "text-[10px] font-medium py-1 rounded-md bg-white shadow-sm text-stone-700 transition-all";
+            }
+        }
+
         function parseCSV(text) {
             const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => line);
             if (lines.length === 0) return [];
             
-            // ฟังก์ชันหั่นคำโดยไม่สน comma ด้านในเครื่องหมายคำพูด
             const splitLine = (line) => {
                 const result = [];
                 let current = '';
@@ -116,21 +131,28 @@
         }
 
         async function fetchTags() {
+            let targetUrl = sheetCsvUrl;
+            if (window.location.protocol === 'file:') {
+                targetUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(sheetCsvUrl);
+            }
+
             try {
-                const response = await fetch(sheetCsvUrl);
+                const response = await fetch(targetUrl);
                 if (!response.ok) throw new Error('Network response was not ok');
-                const dataText = await response.text();
-                tagData = parseCSV(dataText);
                 
-                if (tagData.length === 0) {
-                    document.getElementById('loading').innerText = "⚠️ ไม่พบข้อมูลในตาราง กรุณากรอกข้อมูลใน Sheet";
-                    return;
+                let dataText = "";
+                if (window.location.protocol === 'file:') {
+                    const json = await response.json();
+                    dataText = json.contents;
+                } else {
+                    dataText = await response.text();
                 }
-                
+
+                tagData = parseCSV(dataText);
                 document.getElementById('loading').style.display = 'none';
                 render();
             } catch (error) {
-                document.getElementById('loading').innerText = "❌ โหลดข้อมูลล้มเหลว กรุณาเช็กการตั้งค่าแชร์ไฟล์";
+                document.getElementById('loading').innerText = "❌ โหลดข้อมูลล้มเหลว";
                 console.error(error);
             }
         }
@@ -153,7 +175,10 @@
                     ${isNext ? 'next-suggested' : ''}`;
                 
                 div.onclick = () => {
-                    const textToCopy = `คลิปที่ ${clipNum}: ${item.tag} (View ${item.view})`;
+                    // ⚡ เลือกคัดลอกตามโหมดที่ตั้งไว้
+                    const textToCopy = (copyMode === 'full') 
+                        ? `คลิปที่ ${clipNum}: ${item.tag} (View ${item.view})` 
+                        : item.tag;
                     
                     navigator.clipboard.writeText(textToCopy).then(() => {
                         if (!copiedHistory.includes(i)) {
