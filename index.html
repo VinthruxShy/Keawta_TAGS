@@ -21,6 +21,7 @@
         body.light-mode .already-copied { background-color: #F5F2ED !important; border-color: #D6CFC7 !important; }
         body.light-mode .text-main { color: #4A4342; }
         body.light-mode .bg-toggle { background-color: #F5F5F4; border-color: #E6E6E5; }
+        body.light-mode .note-tag { background-color: #FFF0F3; color: #FF4D6D; }
 
         /* 🌙 โหมดมืด (Minimal Dark) */
         body.dark-mode { background-color: #1E1A19; color: #E3DCDA; }
@@ -28,8 +29,9 @@
         body.dark-mode .already-copied { background-color: #181514 !important; border-color: #2D2724 !important; opacity: 0.5; }
         body.dark-mode .text-main { color: #E3DCDA; }
         body.dark-mode .bg-toggle { background-color: #2D2724; border-color: #3B3330; }
+        body.dark-mode .note-tag { background-color: #3D2529; color: #FF758F; }
 
-        /* 🚨 คิวถัดไป (แชร์ใช้ร่วมกัน) */
+        /* 🚨 คิวถัดไป */
         .next-suggested {
             border: 2px solid #FF4D6D !important;
             background-color: #FFFDEB !important;
@@ -37,7 +39,7 @@
             animation: pulse-border 1.6s infinite ease-in-out;
         }
         body.dark-mode .next-suggested {
-            background-color: #382C2A !important; /* ปรับพื้นหลังคิวถัดไปในโหมดมืดไม่ให้จ้าเกินไป */
+            background-color: #382C2A !important;
         }
         
         @keyframes pulse-border {
@@ -65,11 +67,9 @@
             <div class="flex items-center gap-1.5">
                 <!-- 🌓 ปุ่มสลับโหมดมืด/สว่าง -->
                 <button onclick="toggleTheme()" id="themeBtn" title="สลับโหมดมืด/สว่าง" class="w-6 h-6 flex items-center justify-center rounded-full bg-white dark:bg-[#2A2422] border border-stone-200 dark:border-stone-700 text-stone-400 hover:text-[#FF758F] active:scale-90 transition-all shadow-sm">
-                    <!-- ไอคอนดวงจันทร์ (แสดงตอนโหมดสว่าง) -->
                     <svg id="iconMoon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"></path>
                     </svg>
-                    <!-- ไอคอนดวงอาทิตย์ (แสดงตอนโหมดมืด) -->
                     <svg id="iconSun" class="w-3.5 h-3.5 hidden" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M7.05 16.95l-1.414 1.414M18.364 18.364l-1.414-1.414M7.05 7.05L5.636 5.636m12.728 12.728A9 9 0 1111 3v2a7 7 0 106 6h2z"></path>
                     </svg>
@@ -94,7 +94,6 @@
         <div id="listContainer" class="flex flex-col gap-1.5"></div>
     </div>
 
-    <!-- แจ้งเตือนสถานะการคัดลอก -->
     <div id="toast" class="fixed top-1/5 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#FF758F] text-white px-4 py-1.5 rounded-full shadow-md transition-all duration-200 opacity-0 pointer-events-none z-50 text-[10px] tracking-wider font-medium">
         COPIED
     </div>
@@ -107,7 +106,6 @@
         let copiedHistory = JSON.parse(localStorage.getItem('rov_tag_history')) || [];
         let nextTargetIndex = copiedHistory.length > 0 ? Math.max(...copiedHistory) + 1 : 0;
 
-        // 🌗 ระบบสลับโหมด มืด / สว่าง
         function initTheme() {
             const savedTheme = localStorage.getItem('rov_theme') || 'light';
             if (savedTheme === 'dark') {
@@ -129,8 +127,8 @@
                 document.getElementById('iconSun').classList.add('hidden');
                 document.getElementById('iconMoon').classList.remove('hidden');
             }
-            // เรียก render ใหม่เพื่อให้สไตล์ปุ่มก๊อปปี้ TikTok เปลี่ยนตามธีมได้เนียนขึ้น
             setCopyMode(copyMode); 
+            render(); // อัปเดตสีของโน้ตแบบ Real-time ทันทีที่กดปุ่มสลับโหมด
         }
 
         function setCopyMode(mode) {
@@ -138,7 +136,6 @@
             const btnFull = document.getElementById('btnModeFull');
             const btnOnly = document.getElementById('btnModeOnly');
             const isDark = document.body.classList.contains('dark-mode');
-            
             const activeClass = isDark ? "bg-[#4A3E3B] text-stone-200 shadow-sm" : "bg-white text-stone-700 shadow-sm";
             
             if (mode === 'full') {
@@ -243,7 +240,8 @@
                     });
                 };
 
-                const noteHTML = item.note ? `<span class="text-[9px] text-[#FF4D6D] font-medium italic bg-[#FFF0F3] dark:bg-[#3D2529] px-1 rounded ml-1">#${item.note}</span>` : '';
+                // 🛠️ เปลี่ยนมาใช้คลาส .note-tag เพื่อให้เปลี่ยนสีสลับตามสไตล์ Dark / Light Mode
+                const noteHTML = item.note ? `<span class="note-tag text-[9px] font-medium italic px-1 rounded ml-1 transition-colors">#${item.note}</span>` : '';
                 const numberDisplay = isCopied 
                     ? `<div class="text-[11px] font-bold text-emerald-500 w-5 text-center flex-shrink-0">✓</div>` 
                     : `<div class="text-[10px] font-bold text-stone-400 w-5 text-center flex-shrink-0">${clipNum}</div>`;
@@ -276,7 +274,6 @@
             render();
         }
 
-        // เรียกทำงานระบบธีมและโหลดข้อมูลคิว
         initTheme();
         fetchTags();
     </script>
