@@ -12,26 +12,61 @@
             overflow-x: hidden; 
             user-select: none; 
             -webkit-user-select: none;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        /* 🌸 เอฟเฟกต์พื้นหลัง Pixel ขยับได้ */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            /* สร้างลวดลายพิกเซลขนาดย่อมขนาด 20x20px ด้วย CSS Radial/Linear Gradient */
+            background-size: 20px 20px;
+            animation: pixelMove 20s linear infinite;
+            transition: background 0.3s ease, opacity 0.3s ease;
         }
         
-        /* ☀️ โหมดสว่าง (โทนเหลืองครีม-ชมพูพาสเทล) */
-        body.light-mode { background-color: #FAF6EE; color: #4A4342; }
-        body.light-mode .minimal-card { background: #FFFFFF; border: 1px solid #EAE1D4; }
-        body.light-mode .already-copied { background-color: #F4EFE6 !important; border-color: #DCD5C9 !important; }
+        /* ☀️ พิกเซลโหมดสว่าง (ชมพูพาสเทลผสมเหลืองครีมนม) */
+        body.light-mode::before {
+            background-color: #FAF6EE;
+            background-image: 
+                radial-gradient(#FFD6E0 20%, transparent 20%),
+                radial-gradient(#FFF0F5 20%, transparent 20%);
+            background-position: 0 0, 10px 10px;
+            opacity: 0.85;
+        }
+        body.light-mode { color: #4A4342; }
+        body.light-mode .minimal-card { background: rgba(255, 255, 255, 0.95); border: 1px solid #EAE1D4; backdrop-filter: blur(4px); }
+        body.light-mode .already-copied { background-color: rgba(244, 239, 230, 0.7) !important; border-color: #DCD5C9 !important; }
         body.light-mode .text-main { color: #4A4342; }
-        body.light-mode .bg-toggle { background-color: #F3ECE0; border-color: #E6DCCD; }
+        body.light-mode .bg-toggle { background-color: rgba(243, 236, 224, 0.8); border-color: #E6DCCD; }
         body.light-mode .note-tag { background-color: #FEF5D1; color: #B57C1E; border: 1px solid #FBE7A1; }
 
-        /* 🌙 โหมดมืด (โทนเหลืองมัสตาร์ดหม่น-น้ำตาลเข้ม) */
-        body.dark-mode { background-color: #1A1816; color: #E8E2D9; }
-        body.dark-mode .minimal-card { background: #26221F; border: 1px solid #3D3631; }
-        body.dark-mode .already-copied { background-color: #151312 !important; border-color: #282422 !important; opacity: 0.5; }
+        /* 🌙 พิกเซลโหมดมืด (พิกเซลนีออนชมพู-ม่วงบนพื้นดำน้ำตาลเข้ม) */
+        body.dark-mode::before {
+            background-color: #1A1816;
+            background-image: 
+                radial-gradient(rgba(255, 117, 143, 0.15) 20%, transparent 20%),
+                radial-gradient(rgba(245, 208, 97, 0.08) 20%, transparent 20%);
+            background-position: 0 0, 10px 10px;
+            opacity: 1;
+        }
+        body.dark-mode { color: #E8E2D9; }
+        body.dark-mode .minimal-card { background: rgba(38, 34, 31, 0.95); border: 1px solid #3D3631; backdrop-filter: blur(4px); }
+        body.dark-mode .already-copied { background-color: rgba(21, 19, 18, 0.6) !important; border-color: #282422 !important; opacity: 0.5; }
         body.dark-mode .text-main { color: #E8E2D9; }
-        body.dark-mode .bg-toggle { background-color: #282422; border-color: #3D3631; }
+        body.dark-mode .bg-toggle { background-color: rgba(40, 36, 34, 0.8); border-color: #3D3631; }
         body.dark-mode .note-tag { background-color: #42371C; color: #F5D061; border: 1px solid #574922; }
 
-        /* 🚨 คิวถัดไป (ขอบชมพูเข้ม พื้นหลังสีเหลืองนวลเด่นสะดุดตา) */
+        /* แอนิเมชันสั่งให้เม็ดพิกเซลเลื่อนไถลเฉียงๆ แบบวนลูป */
+        @keyframes pixelMove {
+            0% { background-position: 0 0, 10px 10px; }
+            100% { background-position: 500px -500px, 510px -490px; }
+        }
+
+        /* 🚨 คิวถัดไป */
         .next-suggested {
             border: 2px solid #FF4D6D !important;
             background-color: #FFFEE0 !important;
@@ -235,7 +270,7 @@
                         setTimeout(() => {
                             nextTargetIndex = i + 1;
                             render();
-                            const nextCard = document.getElementById(`card-${nextTargetIndex}`);
+                            const nextCard = document.getElementById('card-' + nextTargetIndex);
                             if (nextCard) nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }, 300);
                     });
