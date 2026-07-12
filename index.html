@@ -291,7 +291,29 @@
                     });
                 };
 
-                const noteHTML = item.note ? `<span class="note-tag text-[9px] font-medium italic px-1.5 py-0.5 rounded ml-1 transition-colors">#${item.note}</span>` : '';
+                let noteHTML = '';
+if (item.note) {
+    const isDark = document.body.classList.contains('dark-mode');
+    // ดึงค่าสีจาก CSV ถ้าไม่มีจะใช้สีเหลืองอมส้มตัวเดิมเป็นค่าเริ่มต้น
+    let rawColor = item.notecolor ? item.notecolor.trim() : '#F5D061';
+    
+    // ตั้งค่าการแสดงผลแบบยืดหยุ่นรองรับโหมดมืด/สว่าง
+    let bgColor = isDark ? `${rawColor}22` : `${rawColor}22`; // ใช้สีใสแบบ 13% opacity
+    let textColor = rawColor;
+    let borderColor = isDark ? `${rawColor}44` : `${rawColor}66`;
+
+    // ถ้าใส่มาเป็น Hex เต็ม เช่น #FF4D6D ให้แสดงผลตามสีจริง
+    if (rawColor.startsWith('#')) {
+        bgColor = isDark ? `${rawColor}33` : `${rawColor}22`;
+        textColor = isDark ? '#FFFFFF' : rawColor;
+        borderColor = rawColor;
+    }
+
+    noteHTML = `<span class="text-[9px] font-medium italic px-1.5 py-0.5 rounded ml-1 border transition-all" 
+                      style="background-color: ${bgColor}; color: ${textColor}; border-color: ${borderColor};">
+                    #${item.note}
+                </span>`;
+}
                 const numberDisplay = isCopied 
                     ? `<div class="text-[11px] font-bold text-emerald-500 w-5 text-center flex-shrink-0">✓</div>` 
                     : `<div class="text-[10px] font-bold text-stone-400 dark:text-stone-500 w-5 text-center flex-shrink-0">${clipNum}</div>`;
