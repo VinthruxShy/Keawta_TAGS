@@ -41,7 +41,7 @@
                         border-color 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
                         box-shadow 0.4s ease;
         }
-        .minimal-card:active { transform: scale(0.96); }
+        .minimal-card:active { transform: scale(0.99); }
 
         /* 🚨 คิวถัดไป */
         .next-suggested {
@@ -188,8 +188,8 @@
     <script>
         const sheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQLhkH6_H32hlVLnqQbTt_fMuSTfovUJgzhQm_yeTRPew6vwdP59OJQvs10psW_NH6ewOc-42UKNI75/pub?output=csv";
         
-        // 🚨 ผูก URL เว็บแอปของ Google Apps Script เรียบร้อยแล้วครับ
-        const scriptWebUrl = "https://script.google.com/macros/s/AKfycbwpWNP6otum0M-bv4jitq8MxAYCoN8IeW1A6elDUFvFxEa5bbjsbckN34C1xyvcrOKz/exec";
+        // 🚨 อัปเดต URL เว็บแอปตัวล่าสุดที่คุณให้มาเรียบร้อยครับ
+        const scriptWebUrl = "https://script.google.com/macros/s/AKfycbx_3v-bQMsmNHC2Ym4BKb8wTmc6enV9MB3aaSww_4tZEktdsuf68g6kFb2iA5-VQ9BT/exec";
 
         let tagData = [];
         let copyMode = 'full'; 
@@ -233,6 +233,7 @@
             }
         }
 
+        // 🚀 ส่งคำสั่งเพิ่มข้อมูลเข้า Google Sheet
         async function submitToGoogleSheet() {
             const tag = document.getElementById('inputTag').value.trim();
             const view = document.getElementById('inputView').value.trim();
@@ -249,35 +250,49 @@
             btn.disabled = true;
             btn.innerText = "⏳ กำลังบันทึกลงระบบ...";
 
-            const payload = { tag, view, pts, note, notecolor };
+            const payload = { action: "insert", tag, view, pts, note, notecolor };
+            await sendRequest(payload, "บันทึกสำเร็จ! กำลังรีเฟรชข้อมูล ✨");
+            
+            document.getElementById('inputTag').value = "";
+            document.getElementById('inputView').value = "";
+            document.getElementById('inputPts').value = "";
+            document.getElementById('inputNote').value = "";
+            toggleAddForm();
+        }
 
+        // ❌ ส่งคำสั่งลบแท็ก
+        async function deleteTag(index, e) {
+            e.stopPropagation(); 
+            if(!confirm("คุณต้องการลบแท็กนี้ออกจากระบบใช่ไหม? 🥺")) return;
+            
+            const payload = { action: "delete", index: index };
+            await sendRequest(payload, "ลบแท็กเรียบร้อยแล้ว! 🗑️");
+        }
+
+        // 🔼🔽 ส่งคำสั่งสลับแถวข้อมูล (ย้ายแท็กขึ้นหรือลง)
+        async function moveTag(index, direction, e) {
+            e.stopPropagation(); 
+            let targetIndex = direction === 'up' ? index - 1 : index + 1;
+            
+            if (targetIndex < 0 || targetIndex >= tagData.length) return; 
+            
+            const payload = { action: "swap", index1: index, index2: targetIndex };
+            await sendRequest(payload, "ย้ายตำแหน่งแท็กเรียบร้อย! ⚡");
+        }
+
+        // ตัวกลางในการส่งข้อมูลหา Google Apps Script
+        async function sendRequest(payload, successMessage) {
             try {
-                const response = await fetch(scriptWebUrl, {
+                await fetch(scriptWebUrl, {
                     method: 'POST',
                     mode: 'no-cors', 
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-
-                customToast("บันทึกสำเร็จ! กำลังรีเฟรชข้อมูล ✨");
-                
-                document.getElementById('inputTag').value = "";
-                document.getElementById('inputView').value = "";
-                document.getElementById('inputPts').value = "";
-                document.getElementById('inputNote').value = "";
-                
-                toggleAddForm();
-                
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerText = "🚀 บันทึกลงระบบหลังบ้าน";
-                    fetchTags();
-                }, 2000);
-
+                customToast(successMessage);
+                setTimeout(() => { fetchTags(); }, 1500);
             } catch (error) {
                 alert("เกิดข้อผิดพลาดในการเชื่อมต่อระบบหลังบ้านครับ ❌");
-                btn.disabled = false;
-                btn.innerText = "🚀 บันทึกลงระบบหลังบ้าน";
             }
         }
 
@@ -332,7 +347,7 @@
 
         async function fetchTags() {
             document.getElementById('loading').style.display = 'block';
-            document.getElementById('loading').innerText = "กำลังดึงข้อมูลล่าสุดจากระบบ... ⏱️";
+            document.getElementById('loading').innerText = "กำลังปรับปรุงรายการแท็ก... ⏱️";
             
             let targetUrl = sheetCsvUrl + "&nocache=" + new Date().getTime();
             if (window.location.protocol === 'file:') {
@@ -376,7 +391,7 @@
                 const isCopied = copiedHistory.includes(i);
                 const isNext = (i === nextTargetIndex) && (nextTargetIndex < tagData.length);
                 
-                div.className = `minimal-card w-full p-2.5 flex items-center gap-2.5 cursor-pointer select-none 
+                div.className = `minimal-card w-full p-2.5 flex items-center gap-2 cursor-pointer select-none 
                     ${isCopied ? 'already-copied' : ''} 
                     ${isNext ? 'next-suggested' : ''}`;
                 
@@ -430,9 +445,12 @@
                     ? `<div class="text-[11px] font-bold text-emerald-500 w-5 text-center flex-shrink-0">✓</div>` 
                     : `<div class="text-[10px] font-bold text-stone-400 dark:text-stone-500 w-5 text-center flex-shrink-0">${clipNum}</div>`;
 
+                const upOpacity = (i === 0) ? 'opacity-20 pointer-events-none' : 'hover:text-[#FF758F]';
+                const downOpacity = (i === tagData.length - 1) ? 'opacity-20 pointer-events-none' : 'hover:text-[#FF758F]';
+
                 div.innerHTML = `
                     ${numberDisplay}
-                    <div class="flex-grow min-w-0">
+                    <div class="flex-grow min-w-0 pr-1">
                         <div class="text-[11px] ${isCopied ? 'text-stone-400 line-through opacity-40' : 'text-main'} font-normal truncate transition-all duration-300">
                             ${item.tag}
                         </div>
@@ -442,6 +460,13 @@
                             <span>${item.pts} pts</span>
                             ${noteHTML}
                         </div>
+                    </div>
+                    
+                    <!-- 🛠️ โซนปุ่มเครื่องมือ: ย้ายตำแหน่ง & ลบแท็ก -->
+                    <div class="flex items-center gap-1 flex-shrink-0 border-l border-stone-200 dark:border-stone-800 pl-1.5">
+                        <button onclick="moveTag(${i}, 'up', event)" title="ย้ายขึ้น" class="w-4 h-4 flex items-center justify-center text-stone-400 transition-all text-[10px] ${upOpacity}">▲</button>
+                        <button onclick="moveTag(${i}, 'down', event)" title="ย้ายลง" class="w-4 h-4 flex items-center justify-center text-stone-400 transition-all text-[10px] ${downOpacity}">▼</button>
+                        <button onclick="deleteTag(${i}, event)" title="ลบแท็กนี้" class="w-4 h-4 flex items-center justify-center text-stone-400 hover:text-red-500 transition-all text-[10px] ml-0.5">✕</button>
                     </div>
                 `;
                 list.appendChild(div);
