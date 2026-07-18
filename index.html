@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RoV Tags Cloud Live</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 📦 ดึง SortableJS เข้ามาช่วยจัดการเรื่อง Drag & Drop ให้สมูทระดับโปร -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         body { 
@@ -34,18 +36,22 @@
         body.dark-mode .note-tag { background-color: #42371C; color: #F5D061; border: 1px solid #574922; }
         body.dark-mode .pixel-pet { opacity: 0.35; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)); }
 
-        /* ⚡ แอนิเมชันความนุ่มนวลในการจัดเรียงและย้ายของรายการ */
-        #listContainer {
-            transition: all 0.3s ease;
-        }
+        /* ⚡ แอนิเมชันตอนกด */
         .minimal-card {
-            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), 
-                        background-color 0.4s ease, 
-                        border-color 0.4s ease, 
-                        box-shadow 0.4s ease,
-                        opacity 0.3s ease;
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
         }
-        .minimal-card:active { transform: scale(0.99); }
+
+        /* 🚨 สไตล์ตอนกำลังลากย้าย */
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: rgba(255, 117, 143, 0.15) !important;
+            border: 2px dashed #FF758F !important;
+        }
+        .sortable-chosen {
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            transform: scale(1.02);
+            cursor: grabbing;
+        }
 
         /* 🚨 คิวถัดไป */
         .next-suggested {
@@ -53,7 +59,6 @@
             background-color: #FFFEE0 !important;
             box-shadow: 0 4px 12px rgba(255, 77, 109, 0.15);
             animation: pulse-border 2s infinite ease-in-out;
-            transform: scale(1.01);
         }
         body.dark-mode .next-suggested {
             background-color: #363021 !important;
@@ -62,7 +67,7 @@
         
         @keyframes pulse-border {
             0% { border-color: #FF4D6D; box-shadow: 0 4px 12px rgba(255, 77, 109, 0.15); }
-            50% { border-color: #FF85A1; box-shadow: 0 6px 18px rgba(255, 133, 161, 0.3); transform: scale(1.015); }
+            50% { border-color: #FF85A1; box-shadow: 0 6px 18px rgba(255, 133, 161, 0.3); }
             100% { border-color: #FF4D6D; box-shadow: 0 4px 12px rgba(255, 77, 109, 0.15); }
         }
         
@@ -182,6 +187,8 @@
         </div>
 
         <div id="loading" class="text-center text-xs text-stone-400 py-8">กำลังดึงข้อมูลล่าสุดจากระบบ... ⏱️</div>
+        
+        <!-- 🚨 พื้นที่สำหรับลากวางเปลี่ยนตำแหน่ง -->
         <div id="listContainer" class="flex flex-col gap-1.5"></div>
     </div>
 
@@ -197,6 +204,7 @@
         let copyMode = 'full'; 
         let copiedHistory = JSON.parse(localStorage.getItem('rov_tag_history')) || [];
         let nextTargetIndex = copiedHistory.length > 0 ? Math.max(...copiedHistory) + 1 : 0;
+        let sortableInstance = null; // เก็บตัวแปรของระบบลากวาง
 
         function initTheme() {
             const savedTheme = localStorage.getItem('rov_theme') || 'light';
@@ -235,7 +243,7 @@
             }
         }
 
-        // 🚀 ส่งคำสั่งเพิ่มข้อมูลเข้า Google Sheet
+        // 🚀 บันทึกเพิ่มข้อมูลปกติ
         async function submitToGoogleSheet() {
             const tag = document.getElementById('inputTag').value.trim();
             const view = document.getElementById('inputView').value.trim();
@@ -274,7 +282,7 @@
             toggleAddForm();
         }
 
-        // ✕ ลบแท็กแบบทันที (Optimistic UI)
+        // ✕ ลบข้อมูลทันที (Optimistic UI)
         function deleteTag(index, e) {
             e.stopPropagation(); 
             if(!confirm("คุณต้องการลบแท็กนี้ออกจากระบบใช่ไหม? 🥺")) return;
@@ -285,7 +293,6 @@
                 card.style.transform = 'scale(0.8)';
             }
 
-            // สั่งลบหลังบ้านแบบ Background Process
             const payload = { action: "delete", index: index };
             fetch(scriptWebUrl, {
                 method: 'POST',
@@ -294,7 +301,6 @@
                 body: JSON.stringify(payload)
             });
 
-            // ปรับ Data ในตัวแปรทันทีโดยไม่ต้องรอโหลดหน้าใหม่
             setTimeout(() => {
                 tagData.splice(index, 1);
                 render();
@@ -302,36 +308,20 @@
             }, 300);
         }
 
-        // ▲▼ สลับตำแหน่งการแสดงผลทันที (Optimistic UI ย้ายโคตรสมูท)
-        function moveTag(index, direction, e) {
-            e.stopPropagation(); 
-            let targetIndex = direction === 'up' ? index - 1 : index + 1;
-            
-            if (targetIndex < 0 || targetIndex >= tagData.length) return; 
+        // 🔼🔽 ฟังก์ชันสลับตำแหน่งเมื่อมีการปล่อยการลากวาง (ทำงานเบื้องหลัง)
+        function syncDragOrder(oldIndex, newIndex) {
+            if (oldIndex === newIndex) return;
 
-            // สลับข้อมูลใน JavaScript ทันทีโดยไม่ต้องรอระบบหลังบ้าน
-            const temp = tagData[index];
-            tagData[index] = tagData[targetIndex];
-            tagData[targetIndex] = temp;
-
-            // รันการจัดโครงสร้างตารางใหม่บนเว็บทันที (แสดงผลทันใจใน 0.01 วินาที)
-            render();
-            
-            // คัดลอกเอฟเฟกต์ชี้เป้าความสมูทไปยังแถวใหม่
-            const newFocusCard = document.getElementById(`card-${targetIndex}`);
-            if (newFocusCard) {
-                newFocusCard.style.backgroundColor = 'rgba(255, 117, 143, 0.1)';
-                setTimeout(() => { newFocusCard.style.backgroundColor = ''; }, 400);
-            }
-
-            // แอบส่งคำสั่งสลับตำแหน่งเงียบๆ ไปที่หลังบ้าน (Background Sync)
-            const payload = { action: "swap", index1: index, index2: targetIndex };
+            // ส่งข้อมูลสั่งหลังบ้านสลับแถวข้อมูลจริงบน Sheet แบบเงียบๆ
+            const payload = { action: "swap", index1: oldIndex, index2: newIndex };
             fetch(scriptWebUrl, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
+            
+            customToast("จัดลำดับแท็กใหม่เรียบร้อย! ⚡");
         }
 
         function customToast(msg) {
@@ -424,11 +414,13 @@
                 const clipNum = String(i + 1).padStart(2, '0');
                 const div = document.createElement('div');
                 div.id = `card-${i}`;
+                // ผูกลำดับ index ไว้ใน dataset เพื่อให้ตรวจจับลำดับตอนลากวางได้ถูกต้อง
+                div.dataset.index = i; 
                 
                 const isCopied = copiedHistory.includes(i);
                 const isNext = (i === nextTargetIndex) && (nextTargetIndex < tagData.length);
                 
-                div.className = `minimal-card w-full p-2.5 flex items-center gap-2 cubic-bezier 
+                div.className = `minimal-card w-full p-2.5 flex items-center gap-2.5 cursor-grab select-none 
                     ${isCopied ? 'already-copied' : ''} 
                     ${isNext ? 'next-suggested' : ''}`;
                 
@@ -480,10 +472,7 @@
                 }
                 const numberDisplay = isCopied 
                     ? `<div class="text-[11px] font-bold text-emerald-500 w-5 text-center flex-shrink-0">✓</div>` 
-                    : `<div class="text-[10px] font-bold text-stone-400 dark:text-stone-500 w-5 text-center flex-shrink-0">${clipNum}</div>`;
-
-                const upOpacity = (i === 0) ? 'opacity-20 pointer-events-none' : 'hover:text-[#FF758F]';
-                const downOpacity = (i === tagData.length - 1) ? 'opacity-20 pointer-events-none' : 'hover:text-[#FF758F]';
+                    : `<div class="text-[10px] font-bold text-stone-400 dark:text-stone-500 w-5 text-center flex-shrink-0 card-number">${clipNum}</div>`;
 
                 div.innerHTML = `
                     ${numberDisplay}
@@ -499,14 +488,47 @@
                         </div>
                     </div>
                     
-                    <!-- 🛠️ โซนปุ่มเครื่องมือ: ย้ายตำแหน่ง & ลบแท็ก -->
-                    <div class="flex items-center gap-1 flex-shrink-0 border-l border-stone-200 dark:border-stone-800 pl-1.5">
-                        <button onclick="moveTag(${i}, 'up', event)" title="ย้ายขึ้น" class="w-4 h-4 flex items-center justify-center text-stone-400 transition-all text-[10px] ${upOpacity}">▲</button>
-                        <button onclick="moveTag(${i}, 'down', event)" title="ย้ายลง" class="w-4 h-4 flex items-center justify-center text-stone-400 transition-all text-[10px] ${downOpacity}">▼</button>
-                        <button onclick="deleteTag(${i}, event)" title="ลบแท็กนี้" class="w-4 h-4 flex items-center justify-center text-stone-400 hover:text-red-500 transition-all text-[10px] ml-0.5">✕</button>
+                    <!-- 🛠️ โซนลบลำดับมินิมอล (ตัดลูกศรขึ้นลงทิ้งไป เพราะใช้ลากตรงๆ ได้เลย) -->
+                    <div class="flex items-center flex-shrink-0 border-l border-stone-200 dark:border-stone-800 pl-2">
+                        <button onclick="deleteTag(${i}, event)" title="ลบแท็กนี้" class="w-5 h-5 flex items-center justify-center text-stone-400 hover:text-red-500 transition-all text-xs">✕</button>
                     </div>
                 `;
                 list.appendChild(div);
+            });
+
+            // 🛠️ เปิดเปิดระบบลากวางผ่าน SortableJS หลังจากวาด HTML เสร็จ
+            if(sortableInstance) sortableInstance.destroy(); // เคลียร์ตัวเก่าทิ้งก่อนกันบั๊กซ้ำซ้อน
+            
+            sortableInstance = new Sortable(list, {
+                animation: 250, // ความเร็วของการเคลื่อนไหวสลับตาราง (มิลลิวินาที)
+                ghostClass: 'sortable-ghost', // คลาสตอนกำลังลากเงา
+                chosenClass: 'sortable-chosen', // คลาสตอนกำลังจับวัตถุ
+                delay: 150, // หน่วงเวลาการสัมผัส 150ms บนมือถือ เพื่อช่วยให้ไม่ไปขัดขวางการกดยิงคัดลอกแท็กปกติ
+                delayOnTouchOnly: true, // หน่วงเวลาเฉพาะบนจอมือถือ
+                
+                // เหตุการณ์ทำงานหลังจากการลากปล่อยเสร็จสิ้น
+                onEnd: function (evt) {
+                    const oldIdx = parseInt(evt.item.dataset.index);
+                    
+                    // อัปเดต Array ข้อมูลใน JavaScript ให้ตรงกับการจัดระเบียบใหม่
+                    const movedItem = tagData.splice(oldIdx, 1)[0];
+                    tagData.splice(evt.newIndex, 0, movedItem);
+                    
+                    // ทำการรันโครงสร้างเพื่อรันเลขลำดับสลาก (เช่น Clip 01 -> 02 ให้สอดคล้องใหม่)
+                    const cards = list.querySelectorAll('.minimal-card');
+                    cards.forEach((card, index) => {
+                        card.dataset.index = index;
+                        const numDiv = card.querySelector('.card-number');
+                        if (numDiv) numDiv.innerText = String(index + 1).padStart(2, '0');
+                        
+                        // อัปเดตปุ่มลบให้ตรงกับ Index ล่าสุดด้วย
+                        const delBtn = card.querySelector('button');
+                        if (delBtn) delBtn.setAttribute('onclick', `deleteTag(${index}, event)`);
+                    });
+
+                    // ยิงซิงค์ระบบไปหา Google Sheet ด้านหลังเงียบๆ
+                    syncDragOrder(oldIdx, evt.newIndex);
+                }
             });
         }
 
