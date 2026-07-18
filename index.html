@@ -34,12 +34,16 @@
         body.dark-mode .note-tag { background-color: #42371C; color: #F5D061; border: 1px solid #574922; }
         body.dark-mode .pixel-pet { opacity: 0.35; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)); }
 
-        /* ⚡ แอนิเมชันตอนกด */
+        /* ⚡ แอนิเมชันความนุ่มนวลในการจัดเรียงและย้ายของรายการ */
+        #listContainer {
+            transition: all 0.3s ease;
+        }
         .minimal-card {
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), 
-                        background-color 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
-                        border-color 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
-                        box-shadow 0.4s ease;
+            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), 
+                        background-color 0.4s ease, 
+                        border-color 0.4s ease, 
+                        box-shadow 0.4s ease,
+                        opacity 0.3s ease;
         }
         .minimal-card:active { transform: scale(0.99); }
 
@@ -187,8 +191,6 @@
 
     <script>
         const sheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQLhkH6_H32hlVLnqQbTt_fMuSTfovUJgzhQm_yeTRPew6vwdP59OJQvs10psW_NH6ewOc-42UKNI75/pub?output=csv";
-        
-        // 🚨 อัปเดต URL เว็บแอปตัวล่าสุดที่คุณให้มาเรียบร้อยครับ
         const scriptWebUrl = "https://script.google.com/macros/s/AKfycbx_3v-bQMsmNHC2Ym4BKb8wTmc6enV9MB3aaSww_4tZEktdsuf68g6kFb2iA5-VQ9BT/exec";
 
         let tagData = [];
@@ -251,37 +253,7 @@
             btn.innerText = "⏳ กำลังบันทึกลงระบบ...";
 
             const payload = { action: "insert", tag, view, pts, note, notecolor };
-            await sendRequest(payload, "บันทึกสำเร็จ! กำลังรีเฟรชข้อมูล ✨");
             
-            document.getElementById('inputTag').value = "";
-            document.getElementById('inputView').value = "";
-            document.getElementById('inputPts').value = "";
-            document.getElementById('inputNote').value = "";
-            toggleAddForm();
-        }
-
-        // ❌ ส่งคำสั่งลบแท็ก
-        async function deleteTag(index, e) {
-            e.stopPropagation(); 
-            if(!confirm("คุณต้องการลบแท็กนี้ออกจากระบบใช่ไหม? 🥺")) return;
-            
-            const payload = { action: "delete", index: index };
-            await sendRequest(payload, "ลบแท็กเรียบร้อยแล้ว! 🗑️");
-        }
-
-        // 🔼🔽 ส่งคำสั่งสลับแถวข้อมูล (ย้ายแท็กขึ้นหรือลง)
-        async function moveTag(index, direction, e) {
-            e.stopPropagation(); 
-            let targetIndex = direction === 'up' ? index - 1 : index + 1;
-            
-            if (targetIndex < 0 || targetIndex >= tagData.length) return; 
-            
-            const payload = { action: "swap", index1: index, index2: targetIndex };
-            await sendRequest(payload, "ย้ายตำแหน่งแท็กเรียบร้อย! ⚡");
-        }
-
-        // ตัวกลางในการส่งข้อมูลหา Google Apps Script
-        async function sendRequest(payload, successMessage) {
             try {
                 await fetch(scriptWebUrl, {
                     method: 'POST',
@@ -289,11 +261,77 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                customToast(successMessage);
+                customToast("บันทึกสำเร็จ! กำลังปรับปรุงข้อมูล ✨");
                 setTimeout(() => { fetchTags(); }, 1500);
             } catch (error) {
                 alert("เกิดข้อผิดพลาดในการเชื่อมต่อระบบหลังบ้านครับ ❌");
             }
+
+            document.getElementById('inputTag').value = "";
+            document.getElementById('inputView').value = "";
+            document.getElementById('inputPts').value = "";
+            document.getElementById('inputNote').value = "";
+            toggleAddForm();
+        }
+
+        // ✕ ลบแท็กแบบทันที (Optimistic UI)
+        function deleteTag(index, e) {
+            e.stopPropagation(); 
+            if(!confirm("คุณต้องการลบแท็กนี้ออกจากระบบใช่ไหม? 🥺")) return;
+            
+            const card = document.getElementById(`card-${index}`);
+            if(card) {
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.8)';
+            }
+
+            // สั่งลบหลังบ้านแบบ Background Process
+            const payload = { action: "delete", index: index };
+            fetch(scriptWebUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            // ปรับ Data ในตัวแปรทันทีโดยไม่ต้องรอโหลดหน้าใหม่
+            setTimeout(() => {
+                tagData.splice(index, 1);
+                render();
+                customToast("ลบแท็กเรียบร้อยแล้ว! 🗑️");
+            }, 300);
+        }
+
+        // ▲▼ สลับตำแหน่งการแสดงผลทันที (Optimistic UI ย้ายโคตรสมูท)
+        function moveTag(index, direction, e) {
+            e.stopPropagation(); 
+            let targetIndex = direction === 'up' ? index - 1 : index + 1;
+            
+            if (targetIndex < 0 || targetIndex >= tagData.length) return; 
+
+            // สลับข้อมูลใน JavaScript ทันทีโดยไม่ต้องรอระบบหลังบ้าน
+            const temp = tagData[index];
+            tagData[index] = tagData[targetIndex];
+            tagData[targetIndex] = temp;
+
+            // รันการจัดโครงสร้างตารางใหม่บนเว็บทันที (แสดงผลทันใจใน 0.01 วินาที)
+            render();
+            
+            // คัดลอกเอฟเฟกต์ชี้เป้าความสมูทไปยังแถวใหม่
+            const newFocusCard = document.getElementById(`card-${targetIndex}`);
+            if (newFocusCard) {
+                newFocusCard.style.backgroundColor = 'rgba(255, 117, 143, 0.1)';
+                setTimeout(() => { newFocusCard.style.backgroundColor = ''; }, 400);
+            }
+
+            // แอบส่งคำสั่งสลับตำแหน่งเงียบๆ ไปที่หลังบ้าน (Background Sync)
+            const payload = { action: "swap", index1: index, index2: targetIndex };
+            fetch(scriptWebUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
         }
 
         function customToast(msg) {
@@ -347,7 +385,6 @@
 
         async function fetchTags() {
             document.getElementById('loading').style.display = 'block';
-            document.getElementById('loading').innerText = "กำลังปรับปรุงรายการแท็ก... ⏱️";
             
             let targetUrl = sheetCsvUrl + "&nocache=" + new Date().getTime();
             if (window.location.protocol === 'file:') {
@@ -391,7 +428,7 @@
                 const isCopied = copiedHistory.includes(i);
                 const isNext = (i === nextTargetIndex) && (nextTargetIndex < tagData.length);
                 
-                div.className = `minimal-card w-full p-2.5 flex items-center gap-2 cursor-pointer select-none 
+                div.className = `minimal-card w-full p-2.5 flex items-center gap-2 cubic-bezier 
                     ${isCopied ? 'already-copied' : ''} 
                     ${isNext ? 'next-suggested' : ''}`;
                 
