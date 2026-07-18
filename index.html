@@ -18,7 +18,7 @@
         
         /* ☀️ โหมดสว่าง */
         body.light-mode { background-color: #FAF6EE; color: #4A4342; }
-        body.light-mode .minimal-card { background: rgba(255, 255, 255, 0.95); border: 1px solid #EAE1D4; backdrop-filter: blur(4px); }
+        body.light-mode .minimal-card, body.light-mode .input-box { background: rgba(255, 255, 255, 0.95); border: 1px solid #EAE1D4; backdrop-filter: blur(4px); }
         body.light-mode .already-copied { background-color: rgba(244, 239, 230, 0.6) !important; border-color: #DCD5C9 !important; }
         body.light-mode .text-main { color: #4A4342; }
         body.light-mode .bg-toggle { background-color: rgba(243, 236, 224, 0.8); border-color: #E6DCCD; }
@@ -27,7 +27,7 @@
 
         /* 🌙 โหมดมืด */
         body.dark-mode { background-color: #1A1816; color: #E8E2D9; }
-        body.dark-mode .minimal-card { background: rgba(38, 34, 31, 0.95); border: 1px solid #3D3631; backdrop-filter: blur(4px); }
+        body.dark-mode .minimal-card, body.dark-mode .input-box { background: rgba(38, 34, 31, 0.95); border: 1px solid #3D3631; backdrop-filter: blur(4px); }
         body.dark-mode .already-copied { background-color: rgba(21, 19, 18, 0.5) !important; border-color: #282422 !important; opacity: 0.4; }
         body.dark-mode .text-main { color: #E8E2D9; }
         body.dark-mode .bg-toggle { background-color: rgba(40, 36, 34, 0.8); border-color: #3D3631; }
@@ -117,6 +117,9 @@
             <span class="text-xs font-bold text-stone-400 dark:text-stone-500 tracking-wide">ROV <span class="text-[#FF758F]">TAGS LIVE</span></span>
             
             <div class="flex items-center gap-1.5">
+                <button onclick="toggleAddForm()" title="เปิด/ปิดฟอร์มเพิ่มข้อมูล" class="w-6 h-6 flex items-center justify-center rounded-full bg-white dark:bg-[#26221F] border border-stone-200 dark:border-stone-700 text-stone-400 hover:text-[#FF758F] active:scale-90 transition-all shadow-sm">
+                    <span id="formToggleIcon" class="text-xs font-bold font-mono">+</span>
+                </button>
                 <button onclick="toggleTheme()" id="themeBtn" title="สลับโหมดมืด/สว่าง" class="w-6 h-6 flex items-center justify-center rounded-full bg-white dark:bg-[#26221F] border border-stone-200 dark:border-stone-700 text-stone-400 hover:text-[#FF758F] active:scale-90 transition-all shadow-sm">
                     <svg id="iconMoon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"></path>
@@ -132,6 +135,41 @@
                 </button>
             </div>
         </header>
+
+        <!-- ➕ ส่วนฟอร์มส่งข้อมูลหลังบ้าน (มินิมอล) -->
+        <div id="addFormContainer" class="hidden input-box p-3 rounded-xl border space-y-2 text-[11px] mb-2 transition-all">
+            <div class="font-bold text-[#FF758F] mb-1">📝 เพิ่มแท็กใหม่เข้าระบบหลังบ้าน</div>
+            <div>
+                <label class="block text-stone-400 mb-0.5">ข้อความแท็ก (Tag)</label>
+                <input type="text" id="inputTag" placeholder="เช่น #RoV #rovthailand" class="w-full px-2 py-1.5 rounded border border-stone-200 dark:border-stone-700 bg-transparent text-main focus:outline-none focus:border-[#FF758F]">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-stone-400 mb-0.5">ยอดวิว (View)</label>
+                    <input type="text" id="inputView" placeholder="เช่น 1.2M หรือ 500K" class="w-full px-2 py-1.5 rounded border border-stone-200 dark:border-stone-700 bg-transparent text-main focus:outline-none focus:border-[#FF758F]">
+                </div>
+                <div>
+                    <label class="block text-stone-400 mb-0.5">คะแนน (PTS)</label>
+                    <input type="number" id="inputPts" placeholder="เช่น 95" class="w-full px-2 py-1.5 rounded border border-stone-200 dark:border-stone-700 bg-transparent text-main focus:outline-none focus:border-[#FF758F]">
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 items-end">
+                <div class="col-span-2">
+                    <label class="block text-stone-400 mb-0.5">โน้ตเพิ่มเติม (Note)</label>
+                    <input type="text" id="inputNote" placeholder="เช่น มาแรง, อัปเดต" class="w-full px-2 py-1.5 rounded border border-stone-200 dark:border-stone-700 bg-transparent text-main focus:outline-none focus:border-[#FF758F]">
+                </div>
+                <div>
+                    <label class="block text-stone-400 mb-0.5">สีโน้ต (Color)</label>
+                    <div class="flex items-center gap-1">
+                        <input type="color" id="inputColor" value="#FF758F" class="w-7 h-7 p-0 bg-transparent border-0 cursor-pointer">
+                        <span class="text-[8px] text-stone-400">เลือกสี</span>
+                    </div>
+                </div>
+            </div>
+            <button onclick="submitToGoogleSheet()" id="btnSubmit" class="w-full mt-2 py-2 bg-[#FF758F] text-white font-medium rounded-lg active:scale-95 transition-all shadow-sm flex justify-center items-center gap-1">
+                <span>🚀 บันทึกลงระบบหลังบ้าน</span>
+            </button>
+        </div>
 
         <!-- ตัวเลือกโหมดการคัดลอกสำหรับ TikTok -->
         <div class="bg-toggle grid grid-cols-2 gap-1 p-1 rounded-lg text-center border transition-colors">
@@ -149,6 +187,9 @@
 
     <script>
         const sheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQLhkH6_H32hlVLnqQbTt_fMuSTfovUJgzhQm_yeTRPew6vwdP59OJQvs10psW_NH6ewOc-42UKNI75/pub?output=csv";
+        
+        // 🚨 ผูก URL เว็บแอปของ Google Apps Script เรียบร้อยแล้วครับ
+        const scriptWebUrl = "https://script.google.com/macros/s/AKfycbwpWNP6otum0M-bv4jitq8MxAYCoN8IeW1A6elDUFvFxEa5bbjsbckN34C1xyvcrOKz/exec";
 
         let tagData = [];
         let copyMode = 'full'; 
@@ -178,6 +219,77 @@
             }
             setCopyMode(copyMode); 
             render(); 
+        }
+
+        function toggleAddForm() {
+            const form = document.getElementById('addFormContainer');
+            const icon = document.getElementById('formToggleIcon');
+            if (form.classList.contains('hidden')) {
+                form.classList.remove('hidden');
+                icon.innerText = "−";
+            } else {
+                form.classList.add('hidden');
+                icon.innerText = "+";
+            }
+        }
+
+        async function submitToGoogleSheet() {
+            const tag = document.getElementById('inputTag').value.trim();
+            const view = document.getElementById('inputView').value.trim();
+            const pts = document.getElementById('inputPts').value.trim();
+            const note = document.getElementById('inputNote').value.trim();
+            const notecolor = document.getElementById('inputColor').value;
+
+            if (!tag) {
+                alert("กรุณากรอกข้อความแท็กก่อนครับ 🥺");
+                return;
+            }
+
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.innerText = "⏳ กำลังบันทึกลงระบบ...";
+
+            const payload = { tag, view, pts, note, notecolor };
+
+            try {
+                const response = await fetch(scriptWebUrl, {
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                customToast("บันทึกสำเร็จ! กำลังรีเฟรชข้อมูล ✨");
+                
+                document.getElementById('inputTag').value = "";
+                document.getElementById('inputView').value = "";
+                document.getElementById('inputPts').value = "";
+                document.getElementById('inputNote').value = "";
+                
+                toggleAddForm();
+                
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerText = "🚀 บันทึกลงระบบหลังบ้าน";
+                    fetchTags();
+                }, 2000);
+
+            } catch (error) {
+                alert("เกิดข้อผิดพลาดในการเชื่อมต่อระบบหลังบ้านครับ ❌");
+                btn.disabled = false;
+                btn.innerText = "🚀 บันทึกลงระบบหลังบ้าน";
+            }
+        }
+
+        function customToast(msg) {
+            const toast = document.getElementById('toast');
+            const originalText = toast.innerText;
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => { 
+                toast.classList.remove('show');
+                setTimeout(() => { toast.innerText = originalText; }, 400);
+            }, 2000);
         }
 
         function setCopyMode(mode) {
@@ -219,9 +331,12 @@
         }
 
         async function fetchTags() {
-            let targetUrl = sheetCsvUrl;
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading').innerText = "กำลังดึงข้อมูลล่าสุดจากระบบ... ⏱️";
+            
+            let targetUrl = sheetCsvUrl + "&nocache=" + new Date().getTime();
             if (window.location.protocol === 'file:') {
-                targetUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(sheetCsvUrl);
+                targetUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(targetUrl);
             }
             try {
                 const response = await fetch(targetUrl);
@@ -292,28 +407,25 @@
                 };
 
                 let noteHTML = '';
-if (item.note) {
-    const isDark = document.body.classList.contains('dark-mode');
-    // ดึงค่าสีจาก CSV ถ้าไม่มีจะใช้สีเหลืองอมส้มตัวเดิมเป็นค่าเริ่มต้น
-    let rawColor = item.notecolor ? item.notecolor.trim() : '#F5D061';
-    
-    // ตั้งค่าการแสดงผลแบบยืดหยุ่นรองรับโหมดมืด/สว่าง
-    let bgColor = isDark ? `${rawColor}22` : `${rawColor}22`; // ใช้สีใสแบบ 13% opacity
-    let textColor = rawColor;
-    let borderColor = isDark ? `${rawColor}44` : `${rawColor}66`;
+                if (item.note) {
+                    const isDark = document.body.classList.contains('dark-mode');
+                    let rawColor = item.notecolor ? item.notecolor.trim() : '#F5D061';
+                    
+                    let bgColor = isDark ? `${rawColor}22` : `${rawColor}22`; 
+                    let textColor = rawColor;
+                    let borderColor = isDark ? `${rawColor}44` : `${rawColor}66`;
 
-    // ถ้าใส่มาเป็น Hex เต็ม เช่น #FF4D6D ให้แสดงผลตามสีจริง
-    if (rawColor.startsWith('#')) {
-        bgColor = isDark ? `${rawColor}33` : `${rawColor}22`;
-        textColor = isDark ? '#FFFFFF' : rawColor;
-        borderColor = rawColor;
-    }
+                    if (rawColor.startsWith('#')) {
+                        bgColor = isDark ? `${rawColor}33` : `${rawColor}22`;
+                        textColor = isDark ? '#FFFFFF' : rawColor;
+                        borderColor = rawColor;
+                    }
 
-    noteHTML = `<span class="text-[9px] font-medium italic px-1.5 py-0.5 rounded ml-1 border transition-all" 
-                      style="background-color: ${bgColor}; color: ${textColor}; border-color: ${borderColor};">
-                    #${item.note}
-                </span>`;
-}
+                    noteHTML = `<span class="text-[9px] font-medium italic px-1.5 py-0.5 rounded ml-1 border transition-all" 
+                                      style="background-color: ${bgColor}; color: ${textColor}; border-color: ${borderColor};">
+                                    #${item.note}
+                                </span>`;
+                }
                 const numberDisplay = isCopied 
                     ? `<div class="text-[11px] font-bold text-emerald-500 w-5 text-center flex-shrink-0">✓</div>` 
                     : `<div class="text-[10px] font-bold text-stone-400 dark:text-stone-500 w-5 text-center flex-shrink-0">${clipNum}</div>`;
